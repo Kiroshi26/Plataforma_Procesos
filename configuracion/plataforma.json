@@ -1,0 +1,12 @@
+{
+  "nombre": "Plataforma de Procesos",
+  "version": "0.4.0",
+  "rutas_proyectos": {
+    "comisiones": "C:\\Proyectos\\Proyecto_Comisiones",
+    "inversiones": "C:\\Proyectos\\Proyecto_Inversiones"
+  },
+  "seguridad": {
+    "inversiones_publicacion_corporativa_autorizada": false,
+    "permitir_solo_salidas_locales_en_pruebas": true
+  }
+}

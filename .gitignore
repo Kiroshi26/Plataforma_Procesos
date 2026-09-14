@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.temp
+*.bak
+
+# Excel temporales
+~$*.xlsx
+~$*.xlsm
+~$*.xlsb
+
+# Resultados generados
+resultados/
+outputs/
+salidas/
+
+# Caché
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# Cobertura
+.coverage
+htmlcov/
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Credenciales y secretos
+.env
+.env.*
+*.key
+*.pem
+
+# Bases de datos locales
+*.db
+*.sqlite
+*.sqlite3

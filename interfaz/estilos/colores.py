@@ -1,0 +1,25 @@
+# Colores principales
+
+PRIMARY = "#2563EB"
+
+SUCCESS = "#10B981"
+
+WARNING = "#F59E0B"
+
+ERROR = "#EF4444"
+
+# Fondos
+
+BACKGROUND = "#F8FAFC"
+
+CARD_BACKGROUND = "#FFFFFF"
+
+# Textos
+
+TEXT_PRIMARY = "#1F2937"
+
+TEXT_SECONDARY = "#6B7280"
+
+# Bordes
+
+BORDER = "#E5E7EB"

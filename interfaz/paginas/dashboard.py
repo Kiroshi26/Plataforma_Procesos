@@ -1,164 +1,60 @@
 import tkinter as tk
 
+from interfaz.estilos import COLORES, FUENTE
+
 
 class DashboardPage(tk.Frame):
+    def __init__(self, parent, registro, on_abrir_proceso=None):
+        super().__init__(parent, bg=COLORES["fondo"])
+        self.registro = registro
+        self.on_abrir_proceso = on_abrir_proceso
+        procesos = registro.listar()
+        disponibles = 0
+        for meta in procesos:
+            try:
+                if registro.obtener(meta["id"]).validar_disponibilidad().get("disponible"):
+                    disponibles += 1
+            except Exception:
+                pass
 
-    def __init__(self, parent, registro):
+        cabecera = tk.Frame(self, bg=COLORES["fondo"])
+        cabecera.pack(fill="x", padx=28, pady=(26, 18))
+        tk.Label(cabecera, text="Inicio", bg=COLORES["fondo"], fg=COLORES["texto"],
+                 font=(FUENTE, 22, "bold")).pack(anchor="w")
+        tk.Label(cabecera, text="Resumen general de la plataforma", bg=COLORES["fondo"],
+                 fg=COLORES["texto_secundario"], font=(FUENTE, 10)).pack(anchor="w", pady=(4, 0))
 
-        super().__init__(
-            parent,
-            bg="#FFFFFF"
-        )
+        metricas = tk.Frame(self, bg=COLORES["fondo"])
+        metricas.pack(fill="x", padx=23)
+        datos = [("Procesos", len(procesos), COLORES["primario"]),
+                 ("Disponibles", disponibles, COLORES["verde"]),
+                 ("No disponibles", len(procesos)-disponibles, COLORES["rojo"])]
+        for titulo, valor, color in datos:
+            self._metrica(metricas, titulo, valor, color).pack(side="left", fill="x", expand=True, padx=5)
 
-        total_procesos = len(
-            registro.listar()
-        )
+        tk.Label(self, text="Procesos disponibles", bg=COLORES["fondo"], fg=COLORES["texto"],
+                 font=(FUENTE, 13, "bold")).pack(anchor="w", padx=28, pady=(25, 10))
+        contenedor = tk.Frame(self, bg=COLORES["fondo"])
+        contenedor.pack(fill="x", padx=23)
+        for meta in procesos:
+            self._proceso(contenedor, meta).pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
-        titulo = tk.Label(
-            self,
-            text="Dashboard",
-            bg="#FFFFFF",
-            fg="#17365D",
-            font=("Segoe UI", 22, "bold")
-        )
+    def _metrica(self, parent, titulo, valor, color):
+        card = tk.Frame(parent, bg=COLORES["panel"], highlightbackground=COLORES["borde"], highlightthickness=1)
+        tk.Frame(card, bg=color, height=3).pack(fill="x")
+        tk.Label(card, text=titulo, bg=COLORES["panel"], fg=COLORES["texto_secundario"],
+                 font=(FUENTE, 9)).pack(anchor="w", padx=16, pady=(14, 3))
+        tk.Label(card, text=str(valor), bg=COLORES["panel"], fg=COLORES["texto"],
+                 font=(FUENTE, 22, "bold")).pack(anchor="w", padx=16, pady=(0, 14))
+        return card
 
-        titulo.pack(
-            anchor="w",
-            padx=30,
-            pady=(30, 10)
-        )
-
-        subtitulo = tk.Label(
-            self,
-            text="Resumen general de la plataforma.",
-            bg="#FFFFFF",
-            fg="#64748B",
-            font=("Segoe UI", 10)
-        )
-
-        subtitulo.pack(
-            anchor="w",
-            padx=30
-        )
-
-        fila = tk.Frame(
-            self,
-            bg="#FFFFFF"
-        )
-
-        fila.pack(
-            fill="x",
-            padx=30,
-            pady=25
-        )
-
-        self._tarjeta(
-            fila,
-            "Procesos",
-            total_procesos
-        ).pack(
-            side="left",
-            fill="both",
-            expand=True,
-            padx=5
-        )
-
-        self._tarjeta(
-            fila,
-            "Ejecuciones",
-            "0"
-        ).pack(
-            side="left",
-            fill="both",
-            expand=True,
-            padx=5
-        )
-
-        self._tarjeta(
-            fila,
-            "Resultados",
-            "0"
-        ).pack(
-            side="left",
-            fill="both",
-            expand=True,
-            padx=5
-        )
-
-        self._tarjeta(
-            fila,
-            "Errores",
-            "0"
-        ).pack(
-            side="left",
-            fill="both",
-            expand=True,
-            padx=5
-        )
-
-        actividad = tk.LabelFrame(
-            self,
-            text="Actividad reciente",
-            bg="#FFFFFF",
-            fg="#17365D",
-            font=("Segoe UI", 10, "bold")
-        )
-
-        actividad.pack(
-            fill="both",
-            expand=True,
-            padx=30,
-            pady=(0, 20)
-        )
-
-        tk.Label(
-            actividad,
-            text="Aún no existen ejecuciones registradas.",
-            bg="#FFFFFF",
-            fg="#64748B",
-            font=("Segoe UI", 10)
-        ).pack(
-            anchor="w",
-            padx=15,
-            pady=15
-        )
-
-    def _tarjeta(
-        self,
-        parent,
-        titulo,
-        valor
-    ):
-
-        tarjeta = tk.Frame(
-            parent,
-            bg="#F8FAFC",
-            highlightbackground="#DCE3EC",
-            highlightthickness=1
-        )
-
-        tk.Label(
-            tarjeta,
-            text=titulo,
-            bg="#F8FAFC",
-            fg="#64748B",
-            font=("Segoe UI", 9)
-        ).pack(
-            anchor="w",
-            padx=15,
-            pady=(15, 5)
-        )
-
-        tk.Label(
-            tarjeta,
-            text=str(valor),
-            bg="#F8FAFC",
-            fg="#1E293B",
-            font=("Segoe UI", 24, "bold")
-        ).pack(
-            anchor="w",
-            padx=15,
-            pady=(0, 15)
-        )
-
-        return tarjeta
+    def _proceso(self, parent, meta):
+        card = tk.Frame(parent, bg=COLORES["panel"], highlightbackground=COLORES["borde"], highlightthickness=1)
+        tk.Label(card, text=meta.get("nombre", meta.get("id", "Proceso")), bg=COLORES["panel"],
+                 fg=COLORES["texto"], font=(FUENTE, 11, "bold")).pack(anchor="w", padx=16, pady=(15, 5))
+        tk.Label(card, text=meta.get("estado", "Disponible"), bg=COLORES["panel"], fg=COLORES["verde"],
+                 font=(FUENTE, 9, "bold")).pack(anchor="w", padx=16)
+        tk.Button(card, text="Abrir  →", relief="flat", bd=0, bg=COLORES["panel"], fg=COLORES["primario"],
+                  activebackground=COLORES["primario_suave"], font=(FUENTE, 9, "bold"), cursor="hand2",
+                  command=lambda: self.on_abrir_proceso and self.on_abrir_proceso(meta["id"])).pack(anchor="e", padx=12, pady=14)
+        return card

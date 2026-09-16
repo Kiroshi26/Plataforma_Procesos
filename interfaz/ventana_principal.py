@@ -7,28 +7,15 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 from typing import Any, Dict
 from nucleo.ejecutor import ejecutar_proyecto
+from nucleo.historial_ejecuciones import HistorialEjecuciones
+from nucleo.gestor_preferencias import GestorPreferencias
 from interfaz.widgets.sidebar import Sidebar
 from interfaz.paginas.dashboard import DashboardPage
 from interfaz.paginas.procesos import PaginaProcesos
 from interfaz.paginas.monitoreo import PaginaMonitoreo
-from interfaz.paginas.configuracion import (
-    PaginaConfiguracion
-)
+from interfaz.paginas.configuracion import PaginaConfiguracion
+from interfaz.estilos import COLORES, FUENTE, aplicar_tema
 
-
-COLORES = {
-    "fondo": "#F4F7FB",
-    "panel": "#FFFFFF",
-    "azul": "#0F5CC0",
-    "azul_oscuro": "#17365D",
-    "texto": "#1E293B",
-    "texto_secundario": "#64748B",
-    "borde": "#DCE3EC",
-    "verde": "#15803D",
-    "amarillo": "#B45309",
-    "rojo": "#B91C1C",
-    "violeta": "#6D28D9",
-}
 
 MESES = [
     ("Enero", 1), ("Febrero", 2), ("Marzo", 3), ("Abril", 4),
@@ -43,14 +30,19 @@ class VentanaPrincipal(tk.Tk):
         super().__init__()
         self.registro = registro
         self.configuracion = configuracion
+        self.preferencias = GestorPreferencias()
+        aplicar_tema(self.preferencias.obtener("tema", "claro"))
         self.proyecto_actual = None
         self.campos: Dict[str, Dict[str, Any]] = {}
         self.en_ejecucion = False
         self.ultimo_resultado = None
+        self.pagina_actual = "inicio"
+        self.historial = HistorialEjecuciones(self.preferencias.obtener("historial", r"C:\Proyectos\pruebas\Historial_AP"))
+        self.ejecucion_historial_actual = None
 
-        self.title("Plataforma de Procesos")
-        self.geometry("1180x760")
-        self.minsize(1020, 680)
+        self.title("Aplicativo de Procesos")
+        self.geometry(self.preferencias.obtener("geometria", "1280x800") if self.preferencias.obtener("recordar_ventana", True) else "1280x800")
+        self.minsize(980, 640)
         self.configure(bg=COLORES["fondo"])
         self.protocol("WM_DELETE_WINDOW", self._cerrar)
 
@@ -58,6 +50,14 @@ class VentanaPrincipal(tk.Tk):
         self._construir_encabezado()
         self._construir_contenido()
         self._construir_pie()
+        if self.preferencias.obtener("recordar_sidebar", True) and self.preferencias.obtener("sidebar_colapsada", False) and not self.sidebar.colapsada:
+            self.sidebar.alternar()
+        if self.preferencias.obtener("recordar_ventana", True) and self.preferencias.obtener("estado_ventana") == "zoomed":
+            try:
+                self.state("zoomed")
+            except tk.TclError:
+                pass
+        self.sidebar.seleccionar("inicio", notificar=False)
         self._mostrar_inicio()
 
     def _configurar_estilos(self):
@@ -72,7 +72,7 @@ class VentanaPrincipal(tk.Tk):
         estilo.configure(
             "Titulo.TLabel",
             background=COLORES["fondo"],
-            foreground=COLORES["azul_oscuro"],
+            foreground=COLORES["texto"],
             font=("Segoe UI", 22, "bold"),
         )
         estilo.configure(
@@ -96,7 +96,7 @@ class VentanaPrincipal(tk.Tk):
         estilo.configure("TButton", font=("Segoe UI", 10), padding=(12, 8))
         estilo.configure(
             "Primary.TButton",
-            background=COLORES["azul"],
+            background=COLORES["primario"],
             foreground="white",
             font=("Segoe UI", 10, "bold"),
         )
@@ -113,15 +113,15 @@ class VentanaPrincipal(tk.Tk):
             padding=(16, 14),
         )
         estilo.map("Project.TButton", background=[("active", "#EAF2FF")])
-        estilo.configure("Horizontal.TProgressbar", troughcolor="#E2E8F0", background=COLORES["azul"])
+        estilo.configure("Horizontal.TProgressbar", troughcolor="#E2E8F0", background=COLORES["primario"])
 
     def _construir_encabezado(self):
         cabecera = ttk.Frame(self)
-        cabecera.pack(fill="x", padx=28, pady=(24, 14))
+        cabecera.pack(fill="x", padx=20, pady=(18, 12))
 
         izquierda = ttk.Frame(cabecera)
         izquierda.pack(side="left", fill="x", expand=True)
-        ttk.Label(izquierda, text="Plataforma de Procesos", style="Titulo.TLabel").pack(anchor="w")
+        ttk.Label(izquierda, text="Aplicativo de Procesos", style="Titulo.TLabel").pack(anchor="w")
         ttk.Label(
             izquierda,
             text="Automatizaciones modulares, trazables y protegidas",
@@ -136,59 +136,83 @@ class VentanaPrincipal(tk.Tk):
         ).pack(side="right", anchor="n", pady=6)
 
     def _construir_contenido(self):
-        cuerpo = ttk.Frame(self)
-        cuerpo.pack(fill="both", expand=True, padx=28, pady=(0, 14))
+        cuerpo = tk.Frame(self, bg=COLORES["fondo"])
+        cuerpo.pack(fill="both", expand=True, padx=20, pady=(0, 12))
 
-        self.panel_proyectos = tk.Frame(
-            cuerpo,
-            bg=COLORES["panel"],
-            highlightbackground=COLORES["borde"],
-            highlightthickness=1,
-            width=290,
-        )
-        self.panel_proyectos.pack(side="left", fill="y")
-        self.panel_proyectos.pack_propagate(False)
-
-        tk.Label(
-            self.panel_proyectos,
-            text="PROYECTOS",
-            bg=COLORES["panel"],
-            fg=COLORES["texto_secundario"],
-            font=("Segoe UI", 9, "bold"),
-        ).pack(anchor="w", padx=18, pady=(20, 10))
-
-        for metadatos in self.registro.listar():
-            boton = ttk.Button(
-                self.panel_proyectos,
-                text=f"  {metadatos['nombre']}\n  {metadatos['estado']}",
-                style="Project.TButton",
-                command=lambda identificador=metadatos["id"]: self._seleccionar_proyecto(identificador),
-            )
-            boton.pack(fill="x", padx=12, pady=5)
-
-        separador = tk.Frame(self.panel_proyectos, height=1, bg=COLORES["borde"])
-        separador.pack(fill="x", padx=18, pady=18)
-
-        tk.Label(
-            self.panel_proyectos,
-            text="Los motores permanecen en sus\nproyectos originales.",
-            justify="left",
-            bg=COLORES["panel"],
-            fg=COLORES["texto_secundario"],
-            font=("Segoe UI", 9),
-        ).pack(anchor="w", padx=18)
+        self.sidebar = Sidebar(cuerpo, on_navegar=self._navegar)
+        self.sidebar.pack(side="left", fill="y")
 
         self.panel_principal = tk.Frame(
             cuerpo,
-            bg=COLORES["panel"],
+            bg=COLORES["fondo"],
             highlightbackground=COLORES["borde"],
             highlightthickness=1,
         )
-        self.panel_principal.pack(side="left", fill="both", expand=True, padx=(16, 0))
+        self.panel_principal.pack(side="left", fill="both", expand=True, padx=(12, 0))
+
+    def _navegar(self, pagina):
+        if self.en_ejecucion and pagina != self.pagina_actual:
+            if not messagebox.askyesno(
+                "Proceso en ejecución",
+                "Hay un proceso en ejecución. ¿Desea cambiar de vista sin detenerlo?",
+            ):
+                self.sidebar.seleccionar(self.pagina_actual, notificar=False)
+                return
+
+        self.pagina_actual = pagina
+        self.sidebar.seleccionar(pagina, notificar=False)
+
+        if pagina == "inicio":
+            self._mostrar_inicio()
+        elif pagina == "procesos":
+            self._mostrar_procesos()
+        elif pagina == "monitoreo":
+            self._mostrar_monitoreo()
+        elif pagina == "configuracion":
+            self._mostrar_configuracion()
+
+    def _mostrar_procesos(self):
+        self._limpiar_panel()
+        pagina = PaginaProcesos(
+            self.panel_principal,
+            self.registro,
+            self._abrir_proyecto_desde_catalogo,
+        )
+        pagina.pack(fill="both", expand=True)
+
+    def _mostrar_pagina_simple(self, clase_pagina):
+        self._limpiar_panel()
+        pagina = clase_pagina(self.panel_principal)
+        pagina.pack(fill="both", expand=True)
+
+    def _mostrar_monitoreo(self):
+        self._limpiar_panel()
+        pagina = PaginaMonitoreo(self.panel_principal, self.historial)
+        pagina.pack(fill="both", expand=True)
+
+    def _mostrar_configuracion(self):
+        self._limpiar_panel()
+        pagina = PaginaConfiguracion(
+            self.panel_principal,
+            self.preferencias,
+            self.configuracion.get("version", "0.4.0"),
+            len(self.registro.listar()),
+            on_guardar=self._aplicar_preferencias_en_ejecucion,
+        )
+        pagina.pack(fill="both", expand=True)
+
+    def _aplicar_preferencias_en_ejecucion(self, datos):
+        if not datos.get("mostrar_consola", True) and hasattr(self, "consola"):
+            self.consola.pack_forget()
+
+    def _abrir_proyecto_desde_catalogo(self, identificador):
+        self.pagina_actual = "procesos"
+        self.sidebar.seleccionar("procesos", notificar=False)
+        self._seleccionar_proyecto(identificador)
 
     def _construir_pie(self):
         pie = ttk.Frame(self)
-        pie.pack(fill="x", padx=28, pady=(0, 18))
+        pie.pack(fill="x", padx=20, pady=(0, 12))
         self.estado_global = ttk.Label(
             pie,
             text="Listo",
@@ -211,7 +235,8 @@ class VentanaPrincipal(tk.Tk):
 
         dashboard = DashboardPage(
             self.panel_principal,
-            self.registro
+            self.registro,
+            self._abrir_proyecto_desde_catalogo,
         )
 
         dashboard.pack(
@@ -291,7 +316,7 @@ class VentanaPrincipal(tk.Tk):
             cabecera,
             text=metadatos["nombre"],
             bg=COLORES["panel"],
-            fg=COLORES["azul_oscuro"],
+            fg=COLORES["texto"],
             font=("Segoe UI", 20, "bold"),
         ).pack(anchor="w")
         tk.Label(
@@ -369,8 +394,8 @@ class VentanaPrincipal(tk.Tk):
         self.consola = tk.Text(
             self.panel_principal,
             height=9,
-            bg="#0F172A",
-            fg="#D7E3F4",
+            bg=COLORES["consola"],
+            fg=COLORES["consola_texto"],
             insertbackground="white",
             relief="flat",
             font=("Consolas", 9),
@@ -378,7 +403,8 @@ class VentanaPrincipal(tk.Tk):
             pady=10,
             state="disabled",
         )
-        self.consola.pack(fill="both", expand=True, padx=30, pady=(12, 8))
+        if self.preferencias.obtener("mostrar_consola", True):
+            self.consola.pack(fill="both", expand=True, padx=30, pady=(12, 8))
         self.panel_resultado = tk.Frame(
             self.panel_principal,
             bg="#F8FAFC",
@@ -530,6 +556,14 @@ class VentanaPrincipal(tk.Tk):
         self.boton_ejecutar.config(state="disabled")
         self.progreso["value"] = 0
         parametros = self._recoger_parametros()
+        try:
+            self.ejecucion_historial_actual = self.historial.iniciar(
+                self.proyecto_actual.obtener_metadatos(),
+                parametros,
+            )
+        except Exception as error:
+            self.ejecucion_historial_actual = None
+            self._escribir_consola(f"[ADVERTENCIA] No fue posible iniciar el historial: {error}")
         hilo = threading.Thread(
             target=self._ejecucion_en_segundo_plano,
             args=(parametros,),
@@ -561,6 +595,10 @@ class VentanaPrincipal(tk.Tk):
         self.progreso["value"] = porcentaje
         self.etiqueta_progreso.config(text=f"{estado}: {mensaje}")
         self._escribir_consola(f"[{estado}] {mensaje}")
+        try:
+            self.historial.agregar_evento(self.ejecucion_historial_actual, estado, mensaje, porcentaje)
+        except Exception:
+            pass
 
     def _finalizar_ejecucion(self, resultado):
         self.ultimo_resultado = resultado
@@ -573,6 +611,12 @@ class VentanaPrincipal(tk.Tk):
         for error in resultado.get("errores", []):
             self._escribir_consola(f"[ERROR] {error}")
         self.etiqueta_progreso.config(text=resultado.get("mensaje", "Proceso finalizado."))
+        try:
+            self.historial.finalizar(self.ejecucion_historial_actual, resultado)
+        except Exception as error:
+            self._escribir_consola(f"[ADVERTENCIA] No fue posible finalizar el historial: {error}")
+        finally:
+            self.ejecucion_historial_actual = None
         self._mostrar_resumen_resultado(resultado)
         archivos = resultado.get("archivos_generados", [])
         if archivos and hasattr(self, "boton_abrir_archivo"):
@@ -580,6 +624,8 @@ class VentanaPrincipal(tk.Tk):
         if resultado.get("exitoso"):
             self.progreso["value"] = 100
             messagebox.showinfo("Ejecución", resultado.get("mensaje", "Proceso finalizado."))
+            if self.preferencias.obtener("abrir_resultado_automaticamente", False) and archivos:
+                self._abrir_ultimo_archivo()
         else:
             messagebox.showwarning("Ejecución", resultado.get("mensaje", "Proceso no ejecutado."))
 
@@ -669,7 +715,7 @@ class VentanaPrincipal(tk.Tk):
             tk.Label(
                 self.panel_resultado, text=f"Informe: {archivos[0]}",
                 wraplength=760, justify="left", bg="#F8FAFC",
-                fg=COLORES["azul"], font=("Segoe UI", 8),
+                fg=COLORES["primario"], font=("Segoe UI", 8),
             ).pack(anchor="w", padx=14, pady=(0, 12))
 
     def _abrir_ultimo_archivo(self):
@@ -694,10 +740,21 @@ class VentanaPrincipal(tk.Tk):
             messagebox.showerror("Informe", str(error))
 
     def _cerrar(self):
-        if self.en_ejecucion:
+        if self.en_ejecucion and self.preferencias.obtener("confirmar_cierre", True):
             if not messagebox.askyesno(
                 "Cerrar",
                 "Hay un proceso en ejecución. ¿Desea cerrar de todas formas?",
             ):
                 return
+        try:
+            cambios = {}
+            if self.preferencias.obtener("recordar_ventana", True):
+                cambios["geometria"] = self.geometry()
+                cambios["estado_ventana"] = self.state()
+            if self.preferencias.obtener("recordar_sidebar", True):
+                cambios["sidebar_colapsada"] = bool(self.sidebar.colapsada)
+            if cambios:
+                self.preferencias.actualizar(cambios)
+        except Exception:
+            pass
         self.destroy()

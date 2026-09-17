@@ -61,7 +61,7 @@ class PaginaConfiguracion(tk.Frame):
 
         acciones = tk.Frame(contenido, bg=COLORES["fondo"])
         acciones.pack(fill="x", pady=(8, 0))
-        tk.Button(acciones, text="Guardar configuración", command=self._guardar, relief="flat", bd=0,
+        tk.Button(acciones, text="Aplicar y guardar", command=self._guardar, relief="flat", bd=0,
                   bg=COLORES["primario"], fg="white", activebackground=COLORES["primario_hover"],
                   activeforeground="white", font=(FUENTE, 9, "bold"), padx=14, pady=8).pack(side="left")
         tk.Button(acciones, text="Restablecer", command=self._restablecer, relief="flat", bd=0,
@@ -89,7 +89,7 @@ class PaginaConfiguracion(tk.Frame):
         self.preferencias.actualizar(datos)
         if self.on_guardar:
             self.on_guardar(datos)
-        messagebox.showinfo("Configuración", "Preferencias guardadas. El tema se aplicará al reiniciar AP.")
+        messagebox.showinfo("Configuración", "Preferencias aplicadas y guardadas correctamente.")
 
     def _restablecer(self):
         if not messagebox.askyesno("Restablecer", "¿Desea restaurar la configuración predeterminada de AP?"):

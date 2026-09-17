@@ -106,7 +106,58 @@ class VentanaPrincipal(tk.Tk):
             foreground=COLORES["texto_secundario"],
             font=("Segoe UI", 10),
         )
-        estilo.configure("TButton", font=("Segoe UI", 10), padding=(12, 8))
+        estilo.configure(
+            "TButton",
+            background=COLORES["panel_suave"],
+            foreground=COLORES["texto"],
+            font=("Segoe UI", 10),
+            padding=(12, 8),
+        )
+        estilo.map(
+            "TButton",
+            background=[("active", COLORES["primario_suave"])],
+            foreground=[("active", COLORES["primario"])],
+        )
+        estilo.configure(
+            "TEntry",
+            fieldbackground=COLORES["panel"],
+            foreground=COLORES["texto"],
+            insertcolor=COLORES["texto"],
+        )
+        estilo.configure(
+            "TCombobox",
+            fieldbackground=COLORES["panel"],
+            background=COLORES["panel"],
+            foreground=COLORES["texto"],
+            arrowcolor=COLORES["texto_secundario"],
+        )
+        estilo.map(
+            "TCombobox",
+            fieldbackground=[("readonly", COLORES["panel"])],
+            foreground=[("readonly", COLORES["texto"])],
+            selectbackground=[("readonly", COLORES["panel"])],
+            selectforeground=[("readonly", COLORES["texto"])],
+        )
+        estilo.configure(
+            "TCheckbutton",
+            background=COLORES["panel"],
+            foreground=COLORES["texto"],
+        )
+        estilo.map(
+            "TCheckbutton",
+            background=[("active", COLORES["panel"])],
+            foreground=[("active", COLORES["primario"])],
+        )
+        estilo.configure(
+            "TRadiobutton",
+            background=COLORES["panel"],
+            foreground=COLORES["texto"],
+        )
+        estilo.map(
+            "TRadiobutton",
+            background=[("active", COLORES["panel"])],
+            foreground=[("active", COLORES["primario"])],
+        )
         estilo.configure(
             "Primary.TButton",
             background=COLORES["primario"],
@@ -115,7 +166,7 @@ class VentanaPrincipal(tk.Tk):
         )
         estilo.map(
             "Primary.TButton",
-            background=[("active", "#0B4DA3"), ("disabled", "#9FB8D8")],
+            background=[("active", COLORES["primario_hover"]), ("disabled", COLORES["texto_secundario"])],
         )
         estilo.configure(
             "Project.TButton",
@@ -125,8 +176,8 @@ class VentanaPrincipal(tk.Tk):
             font=("Segoe UI", 11, "bold"),
             padding=(16, 14),
         )
-        estilo.map("Project.TButton", background=[("active", "#EAF2FF")])
-        estilo.configure("Horizontal.TProgressbar", troughcolor="#E2E8F0", background=COLORES["primario"])
+        estilo.map("Project.TButton", background=[("active", COLORES["primario_suave"])])
+        estilo.configure("Horizontal.TProgressbar", troughcolor=COLORES["borde"], background=COLORES["primario"])
 
     def _construir_encabezado(self):
         cabecera = ttk.Frame(self)
@@ -218,8 +269,46 @@ class VentanaPrincipal(tk.Tk):
         pagina.pack(fill="both", expand=True)
 
     def _aplicar_preferencias_en_ejecucion(self, datos):
-        if not datos.get("mostrar_consola", True) and hasattr(self, "consola"):
-            self.consola.pack_forget()
+        if self.en_ejecucion:
+            messagebox.showwarning(
+                "Configuración",
+                "El tema no puede cambiar mientras hay un proceso en ejecución.",
+            )
+            return
+
+        tema_anterior = COLORES.copy()
+        aplicar_tema(datos.get("tema", "claro"))
+
+        if tema_anterior != COLORES:
+            self._reconstruir_interfaz("configuracion")
+
+    def _reconstruir_interfaz(self, pagina_destino="inicio"):
+        for widget in self.winfo_children():
+            widget.destroy()
+
+        self.configure(bg=COLORES["fondo"])
+        self._configurar_estilos()
+        self._construir_encabezado()
+        self._construir_contenido()
+        self._construir_pie()
+
+        if (
+            self.preferencias.obtener("recordar_sidebar", True)
+            and self.preferencias.obtener("sidebar_colapsada", False)
+            and not self.sidebar.colapsada
+        ):
+            self.sidebar.alternar()
+
+        self.pagina_actual = pagina_destino
+        self.sidebar.seleccionar(pagina_destino, notificar=False)
+        if pagina_destino == "configuracion":
+            self._mostrar_configuracion()
+        elif pagina_destino == "monitoreo":
+            self._mostrar_monitoreo()
+        elif pagina_destino == "procesos":
+            self._mostrar_procesos()
+        else:
+            self._mostrar_inicio()
 
     def _abrir_proyecto_desde_catalogo(self, identificador):
         self.pagina_actual = "procesos"
@@ -264,7 +353,7 @@ class VentanaPrincipal(tk.Tk):
 
         tarjeta = tk.Frame(
             padre,
-            bg="#F8FAFC",
+            bg=COLORES["panel_suave"],
             highlightbackground=COLORES["borde"],
             highlightthickness=1,
         )
@@ -282,7 +371,7 @@ class VentanaPrincipal(tk.Tk):
 
         contenido = tk.Frame(
             tarjeta,
-            bg="#F8FAFC"
+            bg=COLORES["panel_suave"]
         )
 
         contenido.pack(
@@ -295,7 +384,7 @@ class VentanaPrincipal(tk.Tk):
         tk.Label(
             contenido,
             text=titulo,
-            bg="#F8FAFC",
+            bg=COLORES["panel_suave"],
             fg=COLORES["texto"],
             font=("Segoe UI", 12, "bold"),
         ).pack(anchor="w")
@@ -305,7 +394,7 @@ class VentanaPrincipal(tk.Tk):
             text=descripcion,
             wraplength=680,
             justify="left",
-            bg="#F8FAFC",
+            bg=COLORES["panel_suave"],
             fg=COLORES["texto_secundario"],
             font=("Segoe UI", 9),
         ).pack(
@@ -423,7 +512,7 @@ class VentanaPrincipal(tk.Tk):
             self.consola.pack(fill="both", expand=True, padx=30, pady=(12, 8))
         self.panel_resultado = tk.Frame(
             self.panel_principal,
-            bg="#F8FAFC",
+            bg=COLORES["panel_suave"],
             highlightbackground=COLORES["borde"],
             highlightthickness=1,
         )
@@ -431,7 +520,7 @@ class VentanaPrincipal(tk.Tk):
         tk.Label(
             self.panel_resultado,
             text="El resumen de la última ejecución aparecerá aquí.",
-            bg="#F8FAFC",
+            bg=COLORES["panel_suave"],
             fg=COLORES["texto_secundario"],
             font=("Segoe UI", 9),
         ).pack(anchor="w", padx=14, pady=12)
@@ -716,14 +805,14 @@ class VentanaPrincipal(tk.Tk):
         if estado == "ERROR":
             color = COLORES["rojo"]
 
-        cabecera = tk.Frame(self.panel_resultado, bg="#F8FAFC")
+        cabecera = tk.Frame(self.panel_resultado, bg=COLORES["panel_suave"])
         cabecera.pack(fill="x", padx=14, pady=(12, 6))
         tk.Label(
-            cabecera, text="RESUMEN DE LA EJECUCIÓN", bg="#F8FAFC",
+            cabecera, text="RESUMEN DE LA EJECUCIÓN", bg=COLORES["panel_suave"],
             fg=COLORES["texto_secundario"], font=("Segoe UI", 9, "bold"),
         ).pack(side="left")
         tk.Label(
-            cabecera, text=estado, bg="#F8FAFC", fg=color,
+            cabecera, text=estado, bg=COLORES["panel_suave"], fg=color,
             font=("Segoe UI", 9, "bold"),
         ).pack(side="right")
 
@@ -738,20 +827,20 @@ class VentanaPrincipal(tk.Tk):
         ]
         disponibles = [(nombre, valor) for nombre, valor in filas if valor is not None]
         if disponibles:
-            rejilla = tk.Frame(self.panel_resultado, bg="#F8FAFC")
+            rejilla = tk.Frame(self.panel_resultado, bg=COLORES["panel_suave"])
             rejilla.pack(fill="x", padx=10, pady=(2, 8))
             for indice, (nombre, valor) in enumerate(disponibles):
                 tarjeta = tk.Frame(
-                    rejilla, bg="white", highlightbackground=COLORES["borde"],
+                    rejilla, bg=COLORES["panel"], highlightbackground=COLORES["borde"],
                     highlightthickness=1,
                 )
                 tarjeta.grid(row=indice // 3, column=indice % 3, sticky="nsew", padx=4, pady=4)
                 tk.Label(
-                    tarjeta, text=nombre, bg="white", fg=COLORES["texto_secundario"],
+                    tarjeta, text=nombre, bg=COLORES["panel"], fg=COLORES["texto_secundario"],
                     font=("Segoe UI", 8),
                 ).pack(anchor="w", padx=10, pady=(8, 2))
                 tk.Label(
-                    tarjeta, text=str(valor), bg="white", fg=COLORES["texto"],
+                    tarjeta, text=str(valor), bg=COLORES["panel"], fg=COLORES["texto"],
                     font=("Segoe UI", 11, "bold"),
                 ).pack(anchor="w", padx=10, pady=(0, 8))
             for columna in range(3):
@@ -761,7 +850,7 @@ class VentanaPrincipal(tk.Tk):
         if archivos:
             tk.Label(
                 self.panel_resultado, text=f"Informe: {archivos[0]}",
-                wraplength=760, justify="left", bg="#F8FAFC",
+                wraplength=760, justify="left", bg=COLORES["panel_suave"],
                 fg=COLORES["primario"], font=("Segoe UI", 8),
             ).pack(anchor="w", padx=14, pady=(0, 12))
 

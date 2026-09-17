@@ -37,11 +37,17 @@ class VentanaPrincipal(tk.Tk):
         self.en_ejecucion = False
         self.ultimo_resultado = None
         self.pagina_actual = "inicio"
-        self.historial = HistorialEjecuciones(self.preferencias.obtener("historial", r"C:\Proyectos\pruebas\Historial_AP"))
+        self.historial = HistorialEjecuciones(
+            self.preferencias.obtener("historial", r"C:\Proyectos\pruebas\Historial_AP")
+        )
         self.ejecucion_historial_actual = None
 
         self.title("Aplicativo de Procesos")
-        self.geometry(self.preferencias.obtener("geometria", "1280x800") if self.preferencias.obtener("recordar_ventana", True) else "1280x800")
+        self.geometry(
+            self.preferencias.obtener("geometria", "1280x800")
+            if self.preferencias.obtener("recordar_ventana", True)
+            else "1280x800"
+        )
         self.minsize(980, 640)
         self.configure(bg=COLORES["fondo"])
         self.protocol("WM_DELETE_WINDOW", self._cerrar)
@@ -50,9 +56,16 @@ class VentanaPrincipal(tk.Tk):
         self._construir_encabezado()
         self._construir_contenido()
         self._construir_pie()
-        if self.preferencias.obtener("recordar_sidebar", True) and self.preferencias.obtener("sidebar_colapsada", False) and not self.sidebar.colapsada:
+        if (
+            self.preferencias.obtener("recordar_sidebar", True)
+            and self.preferencias.obtener("sidebar_colapsada", False)
+            and not self.sidebar.colapsada
+        ):
             self.sidebar.alternar()
-        if self.preferencias.obtener("recordar_ventana", True) and self.preferencias.obtener("estado_ventana") == "zoomed":
+        if (
+            self.preferencias.obtener("recordar_ventana", True)
+            and self.preferencias.obtener("estado_ventana") == "zoomed"
+        ):
             try:
                 self.state("zoomed")
             except tk.TclError:
@@ -187,7 +200,10 @@ class VentanaPrincipal(tk.Tk):
 
     def _mostrar_monitoreo(self):
         self._limpiar_panel()
-        pagina = PaginaMonitoreo(self.panel_principal, self.historial)
+        pagina = PaginaMonitoreo(
+            self.panel_principal,
+            self.historial,
+        )
         pagina.pack(fill="both", expand=True)
 
     def _mostrar_configuracion(self):
@@ -458,6 +474,22 @@ class VentanaPrincipal(tk.Tk):
             }
             return
 
+        if tipo == "password":
+            control = ttk.Entry(
+                padre,
+                textvariable=variable,
+                width=42,
+                show="*",
+            )
+            control.grid(row=fila, column=1, sticky="ew", pady=7)
+            padre.grid_columnconfigure(1, weight=1)
+            self.campos[campo["id"]] = {
+                "variable": variable,
+                "tipo": tipo,
+                "sensible": True,
+            }
+            return
+
         if tipo == "archivo_excel":
             control = ttk.Entry(padre, textvariable=variable, width=42)
             control.grid(row=fila, column=1, sticky="ew", pady=7)
@@ -563,7 +595,9 @@ class VentanaPrincipal(tk.Tk):
             )
         except Exception as error:
             self.ejecucion_historial_actual = None
-            self._escribir_consola(f"[ADVERTENCIA] No fue posible iniciar el historial: {error}")
+            self._escribir_consola(
+                f"[ADVERTENCIA] No fue posible iniciar el historial: {error}"
+            )
         hilo = threading.Thread(
             target=self._ejecucion_en_segundo_plano,
             args=(parametros,),
@@ -596,7 +630,12 @@ class VentanaPrincipal(tk.Tk):
         self.etiqueta_progreso.config(text=f"{estado}: {mensaje}")
         self._escribir_consola(f"[{estado}] {mensaje}")
         try:
-            self.historial.agregar_evento(self.ejecucion_historial_actual, estado, mensaje, porcentaje)
+            self.historial.agregar_evento(
+                self.ejecucion_historial_actual,
+                estado,
+                mensaje,
+                porcentaje,
+            )
         except Exception:
             pass
 
@@ -612,9 +651,14 @@ class VentanaPrincipal(tk.Tk):
             self._escribir_consola(f"[ERROR] {error}")
         self.etiqueta_progreso.config(text=resultado.get("mensaje", "Proceso finalizado."))
         try:
-            self.historial.finalizar(self.ejecucion_historial_actual, resultado)
+            self.historial.finalizar(
+                self.ejecucion_historial_actual,
+                resultado,
+            )
         except Exception as error:
-            self._escribir_consola(f"[ADVERTENCIA] No fue posible finalizar el historial: {error}")
+            self._escribir_consola(
+                f"[ADVERTENCIA] No fue posible finalizar el historial: {error}"
+            )
         finally:
             self.ejecucion_historial_actual = None
         self._mostrar_resumen_resultado(resultado)
@@ -624,7 +668,10 @@ class VentanaPrincipal(tk.Tk):
         if resultado.get("exitoso"):
             self.progreso["value"] = 100
             messagebox.showinfo("Ejecución", resultado.get("mensaje", "Proceso finalizado."))
-            if self.preferencias.obtener("abrir_resultado_automaticamente", False) and archivos:
+            if (
+                self.preferencias.obtener("abrir_resultado_automaticamente", False)
+                and archivos
+            ):
                 self._abrir_ultimo_archivo()
         else:
             messagebox.showwarning("Ejecución", resultado.get("mensaje", "Proceso no ejecutado."))
@@ -746,6 +793,7 @@ class VentanaPrincipal(tk.Tk):
                 "Hay un proceso en ejecución. ¿Desea cerrar de todas formas?",
             ):
                 return
+
         try:
             cambios = {}
             if self.preferencias.obtener("recordar_ventana", True):
@@ -757,4 +805,5 @@ class VentanaPrincipal(tk.Tk):
                 self.preferencias.actualizar(cambios)
         except Exception:
             pass
+
         self.destroy()

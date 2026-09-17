@@ -1,4 +1,5 @@
 import sys
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -18,96 +19,95 @@ class ResultadoModuloInversiones:
 
 
 def ejecutar(
-    configuracion: dict,
-    anio: int,
-    mes: int,
-    usuario: str,
-    clave: str,
-    ruta_proyecto: str,
-) -> ResultadoModuloInversiones:
+    anio,
+    mes,
+    usuario,
+    clave,
+    ruta_proyecto,
+    reportar_evento=None,
+):
+    raiz = Path(ruta_proyecto).resolve()
+    carpeta_src = raiz / "src"
+    ruta_config = raiz / "config.yaml"
 
-    raiz_inversiones = Path(
-        ruta_proyecto
-    ).resolve()
+    if not raiz.is_dir():
+        raise ErrorModuloInversiones(f"No existe el proyecto de Inversiones: {raiz}")
+    if not carpeta_src.is_dir():
+        raise ErrorModuloInversiones(f"No existe la carpeta src: {carpeta_src}")
+    if not ruta_config.is_file():
+        raise ErrorModuloInversiones(f"No existe el archivo de configuración: {ruta_config}")
 
-    carpeta_src = (
-        raiz_inversiones /
-        "src"
-    )
-
-    if not raiz_inversiones.exists():
-        raise ErrorModuloInversiones(
-            f"No existe el proyecto de Inversiones: "
-            f"{raiz_inversiones}"
-        )
-
-    if not carpeta_src.exists():
-        raise ErrorModuloInversiones(
-            f"No existe la carpeta src: "
-            f"{carpeta_src}"
-        )
-
-    # Para que Python pueda resolver imports como:
-    # from src.insumos import ...
-    ruta_raiz = str(
-        raiz_inversiones
-    )
-
+    ruta_raiz = str(raiz)
     if ruta_raiz not in sys.path:
-        sys.path.insert(
-            0,
-            ruta_raiz
-        )
+        sys.path.insert(0, ruta_raiz)
 
     try:
-        from src.insumos import (
-            cargar_insumos,
+        from src.configuracion import (
+            cargar_configuracion,
+            validar_carpetas,
+            validar_configuracion_red,
+            validar_modo_seguro,
         )
-
-        from src.parametros import (
-            crear_parametros,
-        )
-
-        from src.procesamiento import (
-            preparar_insumos,
-        )
-
-        from src.proceso_inversiones import (
-            ejecutar_proceso_inversiones,
-        )
-
+        from src.insumos import cargar_insumos
+        from src.insumos_red import preparar_insumos_desde_red
+        from src.parametros import crear_parametros
+        from src.procesamiento import preparar_insumos
+        from src.proceso_inversiones import ejecutar_proceso_inversiones
     except ImportError as error:
         raise ErrorModuloInversiones(
-            "No fue posible importar el motor original "
-            f"de Inversiones desde {raiz_inversiones}. "
-            f"Detalle: {error}"
+            f"No fue posible importar el motor original desde {raiz}. Detalle: {error}"
         ) from error
 
-    parametros = crear_parametros(
-        anio=anio,
-        mes=mes,
-    )
+    def evento(estado, mensaje, porcentaje):
+        if reportar_evento:
+            reportar_evento(estado, mensaje, porcentaje)
 
-    insumos = cargar_insumos(
-        configuracion
-    )
+    evento("CONFIGURACION", "Cargando configuración original de Inversiones.", 10)
+    configuracion = cargar_configuracion(str(ruta_config))
+    validar_modo_seguro(configuracion)
+    rutas_locales = validar_carpetas(configuracion)
+    rutas_red = validar_configuracion_red(configuracion)
 
-    resultado_preparacion = preparar_insumos(
-        insumos
-    )
+    parametros = crear_parametros(anio=anio, mes=mes)
 
-    resultado = ejecutar_proceso_inversiones(
+    evento("INSUMOS", "Copiando insumos corporativos a una ejecución local.", 20)
+    ejecucion = preparar_insumos_desde_red(
         configuracion=configuracion,
+        rutas_red=rutas_red,
+        carpeta_ejecuciones=rutas_locales["ejecuciones"],
+        fecha_corte=parametros.fecha_corte,
+    )
+
+    # La configuración original no se modifica. Esta copia solo vive en memoria
+    # durante la ejecución y hace que cargar_insumos lea los archivos congelados.
+    configuracion_ejecucion = deepcopy(configuracion)
+    configuracion_ejecucion["rutas"]["insumos_prueba"] = str(
+        ejecucion.carpeta_ejecucion
+    )
+    configuracion_ejecucion["archivos"]["formato_351"] = ejecucion.formato_351.nombre
+    configuracion_ejecucion["archivos"]["mapas_contables"] = ejecucion.mapas_contables.nombre
+    configuracion_ejecucion["archivos"]["mapas_centros_costos"] = (
+        ejecucion.mapas_centros_costos.nombre
+    )
+
+    evento("LECTURA", "Leyendo las copias locales de los insumos.", 40)
+    insumos = cargar_insumos(configuracion_ejecucion)
+    resultado_preparacion = preparar_insumos(insumos)
+
+    evento("PROCESO", "Ejecutando consulta y conciliación de Inversiones.", 60)
+    resultado = ejecutar_proceso_inversiones(
+        configuracion=configuracion_ejecucion,
         parametros=parametros,
         resultado_preparacion=resultado_preparacion,
         usuario=usuario,
         clave=clave,
     )
 
+    evento("FINALIZADO", "Proceso de Inversiones finalizado.", 100)
     return ResultadoModuloInversiones(
         exitoso=True,
         periodo=parametros.periodo,
-        archivo_saldos=resultado.ruta_archivo,
+        archivo_saldos=Path(resultado.ruta_archivo),
         cantidad_saldos=resultado.cantidad_saldos,
         cantidad_baseneg=resultado.cantidad_baseneg,
         total_mes=resultado.total_mes,

@@ -2,14 +2,10 @@ from pathlib import Path
 
 from nucleo.contrato_proyecto import ContratoProyecto
 from nucleo.resultados import ResultadoEjecucion
-from nucleo.seguridad_salidas import (
-    bloquear_publicacion_corporativa,
-    validar_salida_local,
-)
+from nucleo.seguridad_salidas import bloquear_publicacion_corporativa
 
 
 class AdaptadorInversiones(ContratoProyecto):
-
     def __init__(self, ruta_proyecto):
         self.ruta_proyecto = Path(ruta_proyecto)
 
@@ -17,7 +13,7 @@ class AdaptadorInversiones(ContratoProyecto):
         return {
             "id": "inversiones",
             "nombre": "Inversiones",
-            "descripcion": "Procesamiento de inversiones.",
+            "descripcion": "Procesamiento y conciliación de inversiones usando el motor original.",
             "estado": "DISPONIBLE",
         }
 
@@ -25,15 +21,23 @@ class AdaptadorInversiones(ContratoProyecto):
         return [
             {
                 "id": "periodo",
-                "etiqueta": "Periodo",
+                "etiqueta": "Periodo (AAAA-MM)",
                 "tipo": "periodo",
                 "requerido": True,
             },
             {
-                "id": "carpeta_salida",
-                "etiqueta": "Carpeta local de salida",
-                "tipo": "carpeta",
+                "id": "usuario_nacional",
+                "etiqueta": "Usuario Nacional",
+                "tipo": "texto",
                 "requerido": True,
+                "sensible": True,
+            },
+            {
+                "id": "clave",
+                "etiqueta": "Contraseña Nacional",
+                "tipo": "password",
+                "requerido": True,
+                "sensible": True,
             },
             {
                 "id": "publicar_corporativo",
@@ -45,44 +49,24 @@ class AdaptadorInversiones(ContratoProyecto):
         ]
 
     def validar_disponibilidad(self):
-        if not self.ruta_proyecto.exists():
+        if not self.ruta_proyecto.exists() or not self.ruta_proyecto.is_dir():
             return {
                 "disponible": False,
-                "mensaje": (
-                    "No existe el proyecto de Inversiones: "
-                    f"{self.ruta_proyecto}"
-                ),
+                "mensaje": f"No existe el proyecto de Inversiones: {self.ruta_proyecto}",
             }
 
-        if not self.ruta_proyecto.is_dir():
+        requeridos = [
+            self.ruta_proyecto / "config.yaml",
+            self.ruta_proyecto / "src" / "configuracion.py",
+            self.ruta_proyecto / "src" / "insumos.py",
+            self.ruta_proyecto / "src" / "insumos_red.py",
+            self.ruta_proyecto / "src" / "proceso_inversiones.py",
+        ]
+        faltantes = [str(ruta) for ruta in requeridos if not ruta.exists()]
+        if faltantes:
             return {
                 "disponible": False,
-                "mensaje": (
-                    "La ruta de Inversiones no es una carpeta: "
-                    f"{self.ruta_proyecto}"
-                ),
-            }
-
-        carpeta_src = self.ruta_proyecto / "src"
-
-        if not carpeta_src.exists():
-            return {
-                "disponible": False,
-                "mensaje": (
-                    "No se encontro la carpeta src del proyecto: "
-                    f"{carpeta_src}"
-                ),
-            }
-
-        motor = carpeta_src / "proceso_inversiones.py"
-
-        if not motor.exists():
-            return {
-                "disponible": False,
-                "mensaje": (
-                    "No se encontro el motor de Inversiones: "
-                    f"{motor}"
-                ),
+                "mensaje": "Faltan componentes del motor: " + "; ".join(faltantes),
             }
 
         return {
@@ -92,57 +76,28 @@ class AdaptadorInversiones(ContratoProyecto):
 
     def validar_parametros(self, parametros):
         errores = []
-
-        periodo = str(
-            parametros.get("periodo", "")
-        ).strip()
-
-        if len(periodo) != 7 or periodo[4:5] != "-":
-            errores.append(
-                "El periodo debe tener formato AAAA-MM."
-            )
-        else:
-            try:
-                anio_texto, mes_texto = periodo.split("-")
-
-                anio = int(anio_texto)
-                mes = int(mes_texto)
-
-                if anio < 2000:
-                    errores.append(
-                        "El ano del periodo no es valido."
-                    )
-
-                if mes < 1 or mes > 12:
-                    errores.append(
-                        "El mes debe estar entre 01 y 12."
-                    )
-
-            except ValueError:
-                errores.append(
-                    "El periodo debe contener valores numericos "
-                    "en formato AAAA-MM."
-                )
+        periodo = str(parametros.get("periodo", "")).strip()
+        usuario = str(parametros.get("usuario_nacional", "")).strip()
+        clave = str(parametros.get("clave", ""))
 
         try:
-            validar_salida_local(
-                str(
-                    parametros.get(
-                        "carpeta_salida",
-                        ""
-                    )
-                )
-            )
+            anio_texto, mes_texto = periodo.split("-")
+            anio = int(anio_texto)
+            mes = int(mes_texto)
+            if len(anio_texto) != 4 or anio < 2000 or not 1 <= mes <= 12:
+                raise ValueError
+        except (ValueError, TypeError):
+            errores.append("El periodo debe tener formato AAAA-MM y contener un mes válido.")
 
+        if not usuario:
+            errores.append("Ingrese el Usuario Nacional.")
+        if not clave:
+            errores.append("Ingrese la Contraseña Nacional.")
+
+        try:
             bloquear_publicacion_corporativa(
-                bool(
-                    parametros.get(
-                        "publicar_corporativo",
-                        False
-                    )
-                )
+                bool(parametros.get("publicar_corporativo", False))
             )
-
         except Exception as error:
             errores.append(str(error))
 
@@ -150,63 +105,26 @@ class AdaptadorInversiones(ContratoProyecto):
 
     def ejecutar(self, parametros, reportar_evento):
         try:
-            from integraciones.inversiones.proceso import (
-                ejecutar as ejecutar_inversiones,
-            )
+            from integraciones.inversiones.proceso import ejecutar as ejecutar_inversiones
 
-            periodo = str(
-                parametros.get("periodo", "")
-            ).strip()
-
-            anio_texto, mes_texto = periodo.split("-")
-
-            anio = int(anio_texto)
-            mes = int(mes_texto)
-
-            carpeta_salida = str(
-                parametros.get(
-                    "carpeta_salida",
-                    ""
-                )
-            )
-
-            reportar_evento(
-                "INICIO",
-                "Preparando proceso de Inversiones.",
-                5,
-            )
+            anio_texto, mes_texto = str(parametros["periodo"]).strip().split("-")
+            reportar_evento("INICIO", "Preparando ejecución de Inversiones.", 5)
 
             resultado = ejecutar_inversiones(
-                configuracion={
-                    "carpeta_salida": carpeta_salida,
-                },
-                anio=anio,
-                mes=mes,
-                usuario="",
-                clave="",
-                ruta_proyecto=str(
-                    self.ruta_proyecto
-                ),
-            )
-
-            reportar_evento(
-                "FINALIZADO",
-                "Proceso de Inversiones ejecutado correctamente.",
-                100,
+                anio=int(anio_texto),
+                mes=int(mes_texto),
+                usuario=str(parametros.get("usuario_nacional", "")).strip().upper(),
+                clave=str(parametros.get("clave", "")),
+                ruta_proyecto=str(self.ruta_proyecto),
+                reportar_evento=reportar_evento,
             )
 
             return ResultadoEjecucion(
                 exitoso=resultado.exitoso,
                 estado="FINALIZADO",
-                mensaje=(
-                    "Proceso de Inversiones ejecutado correctamente."
-                ),
-                archivos_generados=[
-                    str(
-                        resultado.archivo_saldos
-                    )
-                ],
-                carpeta_salida=carpeta_salida,
+                mensaje="Proceso de Inversiones ejecutado correctamente.",
+                archivos_generados=[str(resultado.archivo_saldos)],
+                carpeta_salida=str(Path(resultado.archivo_saldos).parent),
                 metricas={
                     "periodo": resultado.periodo,
                     "cantidad_saldos": resultado.cantidad_saldos,
@@ -216,17 +134,10 @@ class AdaptadorInversiones(ContratoProyecto):
             ).como_diccionario()
 
         except Exception as error:
-            reportar_evento(
-                "ERROR",
-                str(error),
-                100,
-            )
-
+            reportar_evento("ERROR", str(error), 100)
             return ResultadoEjecucion(
                 exitoso=False,
                 estado="ERROR",
                 mensaje=str(error),
-                errores=[
-                    str(error)
-                ],
+                errores=[str(error)],
             ).como_diccionario()

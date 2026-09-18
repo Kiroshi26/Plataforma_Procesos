@@ -1,13 +1,12 @@
-import tkinter as tk
+import customtkinter as ctk
+from interfaz.estilos import FUENTE, COLORES
 
-from interfaz.estilos import COLORES, FUENTE
-
-
-class DashboardPage(tk.Frame):
+class DashboardPage(ctk.CTkScrollableFrame):
     def __init__(self, parent, registro, on_abrir_proceso=None):
-        super().__init__(parent, bg=COLORES["fondo"])
+        super().__init__(parent, fg_color="transparent")
         self.registro = registro
         self.on_abrir_proceso = on_abrir_proceso
+        
         procesos = registro.listar()
         disponibles = 0
         for meta in procesos:
@@ -16,45 +15,63 @@ class DashboardPage(tk.Frame):
                     disponibles += 1
             except Exception:
                 pass
-
-        cabecera = tk.Frame(self, bg=COLORES["fondo"])
-        cabecera.pack(fill="x", padx=28, pady=(26, 18))
-        tk.Label(cabecera, text="Inicio", bg=COLORES["fondo"], fg=COLORES["texto"],
-                 font=(FUENTE, 22, "bold")).pack(anchor="w")
-        tk.Label(cabecera, text="Resumen general de la plataforma", bg=COLORES["fondo"],
-                 fg=COLORES["texto_secundario"], font=(FUENTE, 10)).pack(anchor="w", pady=(4, 0))
-
-        metricas = tk.Frame(self, bg=COLORES["fondo"])
-        metricas.pack(fill="x", padx=23)
-        datos = [("Procesos", len(procesos), COLORES["primario"]),
-                 ("Disponibles", disponibles, COLORES["verde"]),
-                 ("No disponibles", len(procesos)-disponibles, COLORES["rojo"])]
-        for titulo, valor, color in datos:
-            self._metrica(metricas, titulo, valor, color).pack(side="left", fill="x", expand=True, padx=5)
-
-        tk.Label(self, text="Procesos disponibles", bg=COLORES["fondo"], fg=COLORES["texto"],
-                 font=(FUENTE, 13, "bold")).pack(anchor="w", padx=28, pady=(25, 10))
-        contenedor = tk.Frame(self, bg=COLORES["fondo"])
-        contenedor.pack(fill="x", padx=23)
-        for meta in procesos:
-            self._proceso(contenedor, meta).pack(side="left", fill="both", expand=True, padx=5, pady=5)
+                
+        cabecera = ctk.CTkFrame(self, fg_color="transparent")
+        cabecera.pack(fill="x", padx=20, pady=(20, 10))
+        
+        ctk.CTkLabel(cabecera, text="Inicio", text_color=COLORES["texto"], 
+                     font=(FUENTE, 28, "bold")).pack(anchor="w")
+        ctk.CTkLabel(cabecera, text="Resumen general de la plataforma", 
+                     text_color=COLORES["texto_secundario"], font=(FUENTE, 14)).pack(anchor="w", pady=(0, 10))
+                     
+        metricas = ctk.CTkFrame(self, fg_color="transparent")
+        metricas.pack(fill="x", padx=15)
+        
+        datos = [
+            ("Procesos", len(procesos), COLORES["primario"]),
+            ("Disponibles", disponibles, COLORES["verde"]),
+            ("No disponibles", len(procesos) - disponibles, COLORES["rojo"])
+        ]
+        
+        for i, (titulo, valor, color) in enumerate(datos):
+            metricas.grid_columnconfigure(i, weight=1)
+            tarjeta = self._metrica(metricas, titulo, valor, color)
+            tarjeta.grid(row=0, column=i, sticky="ew", padx=10, pady=5)
+            
+        ctk.CTkLabel(self, text="Procesos disponibles", text_color=COLORES["texto"],
+                     font=(FUENTE, 18, "bold")).pack(anchor="w", padx=25, pady=(30, 10))
+                     
+        contenedor = ctk.CTkFrame(self, fg_color="transparent")
+        contenedor.pack(fill="x", padx=15)
+        
+        for i, meta in enumerate(procesos):
+            contenedor.grid_columnconfigure(i % 2, weight=1)
+            tarjeta = self._proceso(contenedor, meta)
+            tarjeta.grid(row=i // 2, column=i % 2, sticky="ew", padx=10, pady=10)
 
     def _metrica(self, parent, titulo, valor, color):
-        card = tk.Frame(parent, bg=COLORES["panel"], highlightbackground=COLORES["borde"], highlightthickness=1)
-        tk.Frame(card, bg=color, height=3).pack(fill="x")
-        tk.Label(card, text=titulo, bg=COLORES["panel"], fg=COLORES["texto_secundario"],
-                 font=(FUENTE, 9)).pack(anchor="w", padx=16, pady=(14, 3))
-        tk.Label(card, text=str(valor), bg=COLORES["panel"], fg=COLORES["texto"],
-                 font=(FUENTE, 22, "bold")).pack(anchor="w", padx=16, pady=(0, 14))
+        card = ctk.CTkFrame(parent, fg_color=COLORES["panel"], corner_radius=8, 
+                            border_width=1, border_color=COLORES["borde"])
+        
+        barra = ctk.CTkFrame(card, fg_color=color, height=4, corner_radius=4)
+        barra.pack(fill="x", padx=2, pady=(2, 0))
+        
+        ctk.CTkLabel(card, text=titulo, text_color=COLORES["texto_secundario"],
+                     font=(FUENTE, 13)).pack(anchor="w", padx=20, pady=(15, 0))
+        ctk.CTkLabel(card, text=str(valor), text_color=COLORES["texto"],
+                     font=(FUENTE, 32, "bold")).pack(anchor="w", padx=20, pady=(0, 15))
         return card
 
     def _proceso(self, parent, meta):
-        card = tk.Frame(parent, bg=COLORES["panel"], highlightbackground=COLORES["borde"], highlightthickness=1)
-        tk.Label(card, text=meta.get("nombre", meta.get("id", "Proceso")), bg=COLORES["panel"],
-                 fg=COLORES["texto"], font=(FUENTE, 11, "bold")).pack(anchor="w", padx=16, pady=(15, 5))
-        tk.Label(card, text=meta.get("estado", "Disponible"), bg=COLORES["panel"], fg=COLORES["verde"],
-                 font=(FUENTE, 9, "bold")).pack(anchor="w", padx=16)
-        tk.Button(card, text="Abrir  →", relief="flat", bd=0, bg=COLORES["panel"], fg=COLORES["primario"],
-                  activebackground=COLORES["primario_suave"], font=(FUENTE, 9, "bold"), cursor="hand2",
-                  command=lambda: self.on_abrir_proceso and self.on_abrir_proceso(meta["id"])).pack(anchor="e", padx=12, pady=14)
+        card = ctk.CTkFrame(parent, fg_color=COLORES["panel"], corner_radius=8,
+                            border_width=1, border_color=COLORES["borde"])
+        
+        ctk.CTkLabel(card, text=meta.get("nombre", meta.get("id", "Proceso")), 
+                     text_color=COLORES["texto"], font=(FUENTE, 15, "bold")).pack(anchor="w", padx=20, pady=(15, 5))
+        ctk.CTkLabel(card, text=meta.get("estado", "Disponible"), text_color=COLORES["verde"],
+                     font=(FUENTE, 12, "bold")).pack(anchor="w", padx=20)
+                     
+        ctk.CTkButton(card, text="Abrir →", fg_color="transparent", text_color=COLORES["primario"],
+                      hover_color=COLORES["panel_suave"], font=(FUENTE, 13, "bold"),
+                      command=lambda: self.on_abrir_proceso and self.on_abrir_proceso(meta["id"])).pack(anchor="e", padx=15, pady=15)
         return card

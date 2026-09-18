@@ -1,40 +1,39 @@
-import tkinter as tk
+import customtkinter as ctk
 from pathlib import Path
-from tkinter import messagebox, ttk
+from tkinter import messagebox
 
 from interfaz.estilos import COLORES, FUENTE
 
-
-class PaginaConfiguracion(tk.Frame):
+class PaginaConfiguracion(ctk.CTkScrollableFrame):
     def __init__(self, parent, preferencias, version, total_procesos, on_guardar=None, on_restablecer=None):
-        super().__init__(parent, bg=COLORES["fondo"])
+        super().__init__(parent, fg_color="transparent")
         self.preferencias = preferencias
         self.on_guardar = on_guardar
         self.on_restablecer = on_restablecer
 
-        self.tema = tk.StringVar(value=preferencias.obtener("tema", "claro"))
-        self.recordar_ventana = tk.BooleanVar(value=preferencias.obtener("recordar_ventana", True))
-        self.recordar_sidebar = tk.BooleanVar(value=preferencias.obtener("recordar_sidebar", True))
-        self.mostrar_consola = tk.BooleanVar(value=preferencias.obtener("mostrar_consola", True))
-        self.confirmar_cierre = tk.BooleanVar(value=preferencias.obtener("confirmar_cierre", True))
-        self.abrir_resultado = tk.BooleanVar(value=preferencias.obtener("abrir_resultado_automaticamente", False))
+        self.tema = ctk.StringVar(value=preferencias.obtener("tema", "claro"))
+        self.recordar_ventana = ctk.BooleanVar(value=preferencias.obtener("recordar_ventana", True))
+        self.recordar_sidebar = ctk.BooleanVar(value=preferencias.obtener("recordar_sidebar", True))
+        self.mostrar_consola = ctk.BooleanVar(value=preferencias.obtener("mostrar_consola", True))
+        self.confirmar_cierre = ctk.BooleanVar(value=preferencias.obtener("confirmar_cierre", True))
+        self.abrir_resultado = ctk.BooleanVar(value=preferencias.obtener("abrir_resultado_automaticamente", False))
 
         self._construir(version, total_procesos)
 
     def _construir(self, version, total_procesos):
-        tk.Label(self, text="Configuración", bg=COLORES["fondo"], fg=COLORES["texto"],
-                 font=(FUENTE, 22, "bold")).pack(anchor="w", padx=28, pady=(26, 4))
-        tk.Label(self, text="Personaliza el comportamiento y apariencia de AP.", bg=COLORES["fondo"],
-                 fg=COLORES["texto_secundario"], font=(FUENTE, 10)).pack(anchor="w", padx=28, pady=(0, 18))
+        ctk.CTkLabel(self, text="Configuración", text_color=COLORES["texto"],
+                     font=(FUENTE, 28, "bold")).pack(anchor="w", padx=28, pady=(26, 4))
+        ctk.CTkLabel(self, text="Personaliza el comportamiento y apariencia de AP.",
+                     text_color=COLORES["texto_secundario"], font=(FUENTE, 14)).pack(anchor="w", padx=28, pady=(0, 18))
 
-        contenido = tk.Frame(self, bg=COLORES["fondo"])
+        contenido = ctk.CTkFrame(self, fg_color="transparent")
         contenido.pack(fill="both", expand=True, padx=28, pady=(0, 20))
 
         apariencia = self._seccion(contenido, "Apariencia")
-        ttk.Radiobutton(apariencia, text="Claro", variable=self.tema, value="claro").pack(anchor="w", padx=16, pady=(8, 2))
-        ttk.Radiobutton(apariencia, text="Oscuro", variable=self.tema, value="oscuro").pack(anchor="w", padx=16, pady=(2, 8))
-        tk.Label(apariencia, text="El cambio de tema se aplica al reiniciar AP.", bg=COLORES["panel"],
-                 fg=COLORES["texto_secundario"], font=(FUENTE, 9)).pack(anchor="w", padx=16, pady=(0, 12))
+        ctk.CTkRadioButton(apariencia, text="Claro", variable=self.tema, value="claro", text_color=COLORES["texto"]).pack(anchor="w", padx=16, pady=(8, 2))
+        ctk.CTkRadioButton(apariencia, text="Oscuro", variable=self.tema, value="oscuro", text_color=COLORES["texto"]).pack(anchor="w", padx=16, pady=(2, 8))
+        ctk.CTkLabel(apariencia, text="El cambio de tema se aplica al reiniciar AP.",
+                     text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(anchor="w", padx=16, pady=(0, 12))
 
         interfaz = self._seccion(contenido, "Interfaz")
         self._check(interfaz, "Recordar tamaño y posición de la ventana", self.recordar_ventana)
@@ -46,36 +45,41 @@ class PaginaConfiguracion(tk.Frame):
         self._check(comportamiento, "Abrir resultado automáticamente al finalizar", self.abrir_resultado)
 
         historial = self._seccion(contenido, "Historial")
-        ruta_historial = preferencias_ruta = self.preferencias.obtener("historial", r"C:\Proyectos\pruebas\Historial_AP")
-        tk.Label(historial, text="Ubicación temporal", bg=COLORES["panel"], fg=COLORES["texto_secundario"],
-                 font=(FUENTE, 9)).pack(anchor="w", padx=16, pady=(10, 2))
-        tk.Label(historial, text=ruta_historial, bg=COLORES["panel"], fg=COLORES["texto"],
-                 font=(FUENTE, 9), wraplength=700, justify="left").pack(anchor="w", padx=16)
-        estado = "Disponible" if Path(preferencias_ruta).exists() else "Se creará con la primera ejecución"
-        tk.Label(historial, text=estado, bg=COLORES["panel"], fg=COLORES["verde"],
-                 font=(FUENTE, 9, "bold")).pack(anchor="w", padx=16, pady=(4, 12))
+        ruta_historial = self.preferencias.obtener("historial", r"C:\Proyectos\pruebas\Historial_AP")
+        ctk.CTkLabel(historial, text="Ubicación temporal", text_color=COLORES["texto_secundario"],
+                     font=(FUENTE, 12)).pack(anchor="w", padx=16, pady=(10, 2))
+        ctk.CTkLabel(historial, text=ruta_historial, text_color=COLORES["texto"],
+                     font=(FUENTE, 13), wraplength=700, justify="left").pack(anchor="w", padx=16)
+                     
+        estado = "Disponible" if Path(ruta_historial).exists() else "Se creará con la primera ejecución"
+        ctk.CTkLabel(historial, text=estado, text_color=COLORES["verde"],
+                     font=(FUENTE, 12, "bold")).pack(anchor="w", padx=16, pady=(4, 12))
 
         info = self._seccion(contenido, "Información")
-        tk.Label(info, text=f"Versión: {version}    •    Procesos registrados: {total_procesos}",
-                 bg=COLORES["panel"], fg=COLORES["texto_secundario"], font=(FUENTE, 9)).pack(anchor="w", padx=16, pady=12)
+        ctk.CTkLabel(info, text=f"Versión: {version}    •    Procesos registrados: {total_procesos}",
+                     text_color=COLORES["texto_secundario"], font=(FUENTE, 13)).pack(anchor="w", padx=16, pady=12)
 
-        acciones = tk.Frame(contenido, bg=COLORES["fondo"])
-        acciones.pack(fill="x", pady=(8, 0))
-        tk.Button(acciones, text="Aplicar y guardar", command=self._guardar, relief="flat", bd=0,
-                  bg=COLORES["primario"], fg="white", activebackground=COLORES["primario_hover"],
-                  activeforeground="white", font=(FUENTE, 9, "bold"), padx=14, pady=8).pack(side="left")
-        tk.Button(acciones, text="Restablecer", command=self._restablecer, relief="flat", bd=0,
-                  bg=COLORES["panel_suave"], fg=COLORES["texto"], font=(FUENTE, 9), padx=14, pady=8).pack(side="left", padx=8)
+        acciones = ctk.CTkFrame(contenido, fg_color="transparent")
+        acciones.pack(fill="x", pady=(15, 0))
+        
+        ctk.CTkButton(acciones, text="Aplicar y guardar", command=self._guardar,
+                      fg_color=COLORES["primario"], text_color="white", hover_color=COLORES["primario_hover"],
+                      font=(FUENTE, 13, "bold"), corner_radius=6).pack(side="left")
+                      
+        ctk.CTkButton(acciones, text="Restablecer", command=self._restablecer,
+                      fg_color=COLORES["panel_suave"], text_color=COLORES["texto"], border_width=1, border_color=COLORES["borde"],
+                      hover_color=COLORES["borde"], font=(FUENTE, 13), corner_radius=6).pack(side="left", padx=15)
 
     def _seccion(self, parent, titulo):
-        panel = tk.Frame(parent, bg=COLORES["panel"], highlightbackground=COLORES["borde"], highlightthickness=1)
-        panel.pack(fill="x", pady=5)
-        tk.Label(panel, text=titulo, bg=COLORES["panel"], fg=COLORES["texto"],
-                 font=(FUENTE, 11, "bold")).pack(anchor="w", padx=16, pady=(12, 2))
+        panel = ctk.CTkFrame(parent, fg_color=COLORES["panel"], corner_radius=8,
+                             border_width=1, border_color=COLORES["borde"])
+        panel.pack(fill="x", pady=8)
+        ctk.CTkLabel(panel, text=titulo, text_color=COLORES["texto"],
+                     font=(FUENTE, 16, "bold")).pack(anchor="w", padx=16, pady=(12, 2))
         return panel
 
     def _check(self, parent, texto, variable):
-        ttk.Checkbutton(parent, text=texto, variable=variable).pack(anchor="w", padx=16, pady=4)
+        ctk.CTkCheckBox(parent, text=texto, variable=variable, text_color=COLORES["texto"], font=(FUENTE, 13)).pack(anchor="w", padx=16, pady=6)
 
     def _guardar(self):
         datos = {

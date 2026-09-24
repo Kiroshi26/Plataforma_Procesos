@@ -35,6 +35,7 @@ class VentanaPrincipal(ctk.CTk):
         self.en_ejecucion = False
         self.ultimo_resultado = None
         self.pagina_actual = "inicio"
+        self.pagina_monitoreo_cache = None
         self.historial = HistorialEjecuciones(
             self.preferencias.obtener("historial", r"C:\Proyectos\pruebas\Historial_AP")
         )
@@ -111,9 +112,17 @@ class VentanaPrincipal(ctk.CTk):
         pagina.pack(fill="both", expand=True)
 
     def _mostrar_monitoreo(self):
-        self._limpiar_panel()
-        pagina = PaginaMonitoreo(self.panel_principal, self.historial)
+        # Oculta la vista actual sin bloquear la interfaz mientras Monitoreo aparece.
+        for widget in self.panel_principal.winfo_children():
+            widget.pack_forget()
+
+        pagina = self.pagina_monitoreo_cache
+        if pagina is None or not pagina.winfo_exists():
+            pagina = PaginaMonitoreo(self.panel_principal, self.historial)
+            self.pagina_monitoreo_cache = pagina
+
         pagina.pack(fill="both", expand=True)
+        self.after_idle(pagina.actualizar)
 
     def _mostrar_configuracion(self):
         self._limpiar_panel()
@@ -163,6 +172,7 @@ class VentanaPrincipal(ctk.CTk):
         ctk.CTkLabel(pie, text="No se publican resultados corporativos desde esta fase.", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(side="right")
 
     def _limpiar_panel(self):
+        self.pagina_monitoreo_cache = None
         for elemento in self.panel_principal.winfo_children():
             elemento.destroy()
         self.campos = {}

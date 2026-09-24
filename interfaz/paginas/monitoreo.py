@@ -15,8 +15,10 @@ class PaginaMonitoreo(ctk.CTkFrame):
         self.modo = ctk.StringVar(value="todas")
         self.filtro_proceso = ctk.StringVar(value="Todos")
         self.filtro_estado = ctk.StringVar(value="Todos")
+        self._registros_cache = None
+        self._firma_cache = None
         self._construir_interfaz()
-        self.actualizar()
+        self.actualizar(forzar=True)
 
     def _construir_interfaz(self):
         cabecera = ctk.CTkFrame(self, fg_color="transparent")
@@ -32,15 +34,15 @@ class PaginaMonitoreo(ctk.CTkFrame):
         controles.pack(fill="x", padx=28, pady=(0, 12))
 
         ctk.CTkRadioButton(controles, text="Todas", variable=self.modo, value="todas", 
-                           command=self.actualizar, text_color=COLORES["texto"]).pack(side="left")
+                           command=lambda: self.actualizar(forzar=True), text_color=COLORES["texto"]).pack(side="left")
 
         ctk.CTkRadioButton(controles, text="Mis ejecuciones", variable=self.modo, value="mias", 
-                           command=self.actualizar, text_color=COLORES["texto"]).pack(side="left", padx=(15, 25))
+                           command=lambda: self.actualizar(forzar=True), text_color=COLORES["texto"]).pack(side="left", padx=(15, 25))
 
         ctk.CTkLabel(controles, text="Proceso:", text_color=COLORES["texto_secundario"]).pack(side="left")
 
         self.cmb_proceso = ctk.CTkOptionMenu(controles, variable=self.filtro_proceso,
-                                             command=lambda _: self.actualizar(),
+                                             command=lambda _: self.actualizar(forzar=True),
                                              fg_color=COLORES["panel"], text_color=COLORES["texto"],
                                              button_color=COLORES["primario"], button_hover_color=COLORES["primario_hover"])
         self.cmb_proceso.pack(side="left", padx=(8, 20))
@@ -49,7 +51,7 @@ class PaginaMonitoreo(ctk.CTkFrame):
 
         self.cmb_estado = ctk.CTkOptionMenu(controles, variable=self.filtro_estado,
                                             values=["Todos", "FINALIZADO", "ERROR", "EJECUTANDO"],
-                                            command=lambda _: self.actualizar(),
+                                            command=lambda _: self.actualizar(forzar=True),
                                             fg_color=COLORES["panel"], text_color=COLORES["texto"],
                                             button_color=COLORES["primario"], button_hover_color=COLORES["primario_hover"])
         self.cmb_estado.pack(side="left", padx=(8, 0))
@@ -57,12 +59,21 @@ class PaginaMonitoreo(ctk.CTkFrame):
         self.lista = ctk.CTkScrollableFrame(self, fg_color="transparent")
         self.lista.pack(fill="both", expand=True, padx=20, pady=(0, 22))
 
-    def actualizar(self):
-        for widget in self.lista.winfo_children():
-            widget.destroy()
-
+    def actualizar(self, forzar=False):
         usuario = getpass.getuser() if self.modo.get() == "mias" else None
         registros = self.historial.listar(solo_usuario=usuario)
+        firma = tuple(
+            (r.get("id"), r.get("estado"), r.get("fin"), tuple(r.get("archivos_generados", []) or []))
+            for r in registros
+        )
+        firma = (self.modo.get(), self.filtro_proceso.get(), self.filtro_estado.get(), firma)
+        if not forzar and firma == self._firma_cache:
+            return
+        self._firma_cache = firma
+        self._registros_cache = registros
+
+        for widget in self.lista.winfo_children():
+            widget.destroy()
 
         procesos = ["Todos"] + sorted({r.get("proceso_nombre", "Proceso") for r in registros})
         self.cmb_proceso.configure(values=procesos)

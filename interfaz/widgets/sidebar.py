@@ -54,7 +54,8 @@ class Sidebar(ctk.CTkFrame):
                 boton.configure(fg_color="transparent", text_color=("gray20", "gray90"), font=(FUENTE, 13, "normal"))
                 
         if notificar and self.on_navegar:
-            self.on_navegar(clave)
+            self.update_idletasks()
+            self.after_idle(lambda: self.on_navegar(clave))
 
     def alternar(self):
         self.colapsada = not self.colapsada

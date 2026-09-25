@@ -149,7 +149,7 @@ class PaginaMonitoreo(ctk.CTkFrame):
         archivos = registro.get("archivos_generados", []) or []
         if archivos:
             primer_archivo = archivos[0]
-            ctk.CTkButton(acciones, text="Abrir archivo", fg_color=COLORES["primario"], text_color="white",
+            ctk.CTkButton(acciones, text="Abrir archivo", fg_color=COLORES["primario"], text_color=COLORES["texto_boton"],
                           hover_color=COLORES["primario_hover"], font=(FUENTE, 12, "bold"),
                           corner_radius=6, command=lambda ruta=primer_archivo: self._abrir_archivo(ruta)).pack(side="left")
 

@@ -196,7 +196,7 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
             contenido,
             text="Abrir módulo   →",
             fg_color=COLORES["primario"],
-            text_color="#111111",
+            text_color=COLORES["texto_boton"],
             hover_color=COLORES["primario_hover"],
             font=(FUENTE, 12, "bold"),
             corner_radius=7,

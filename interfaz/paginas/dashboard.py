@@ -72,4 +72,4 @@ class DashboardPage(ctk.CTkScrollableFrame):
         ctk.CTkLabel(cuerpo,text=meta.get("nombre",meta.get("id","Proceso")),text_color=COLORES["texto"],font=(FUENTE,16,"bold")).pack(anchor="w")
         ctk.CTkLabel(cuerpo,text=meta.get("descripcion",""),wraplength=430,justify="left",text_color=COLORES["texto_secundario"],font=(FUENTE,11)).pack(anchor="w",pady=(5,7))
         ctk.CTkLabel(cuerpo,text=f"●  {meta.get('estado','Disponible')}",text_color=COLORES["verde"],font=(FUENTE,10,"bold")).pack(anchor="w")
-        ctk.CTkButton(cuerpo,text="Abrir módulo  →",fg_color=COLORES["primario"],hover_color=COLORES["primario_hover"],text_color="#111111",font=(FUENTE,11,"bold"),command=lambda:self.on_abrir_proceso and self.on_abrir_proceso(meta["id"])).pack(anchor="e",pady=(8,0)); return c
+        ctk.CTkButton(cuerpo,text="Abrir módulo  →",fg_color=COLORES["primario"],hover_color=COLORES["primario_hover"],text_color=COLORES["texto_boton"],font=(FUENTE,11,"bold"),command=lambda:self.on_abrir_proceso and self.on_abrir_proceso(meta["id"])).pack(anchor="e",pady=(8,0)); return c

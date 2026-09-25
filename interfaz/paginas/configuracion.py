@@ -84,7 +84,7 @@ class PaginaConfiguracion(ctk.CTkScrollableFrame):
         acciones = ctk.CTkFrame(self, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])
         acciones.pack(fill="x", padx=27, pady=(6, 24))
         ctk.CTkLabel(acciones, text="Los cambios se guardan para futuras sesiones.", text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).pack(side="left", padx=16, pady=14)
-        ctk.CTkButton(acciones, text="Aplicar y guardar", command=self._guardar, fg_color=COLORES["primario"], text_color="#111111", hover_color=COLORES["primario_hover"], font=(FUENTE, 12, "bold"), corner_radius=7, height=38).pack(side="right", padx=14, pady=10)
+        ctk.CTkButton(acciones, text="Aplicar y guardar", command=self._guardar, fg_color=COLORES["primario"], text_color=COLORES["texto_boton"], hover_color=COLORES["primario_hover"], font=(FUENTE, 12, "bold"), corner_radius=7, height=38).pack(side="right", padx=14, pady=10)
 
     def _seccion(self, parent, titulo, subtitulo=""):
         panel = ctk.CTkFrame(parent, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])

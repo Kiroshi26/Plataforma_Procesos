@@ -219,7 +219,7 @@ class VentanaPrincipal(ctk.CTk):
         acciones.pack(fill="x", padx=30, pady=(12, 8))
         
         ctk.CTkButton(acciones, text="Validar parámetros", command=self._validar, fg_color=COLORES["panel_suave"], text_color=COLORES["texto"], hover_color=COLORES["borde"], font=(FUENTE, 13)).pack(side="left")
-        self.boton_ejecutar = ctk.CTkButton(acciones, text="Ejecutar módulo", command=self._ejecutar, fg_color=COLORES["primario"], text_color="white", hover_color=COLORES["primario_hover"], font=(FUENTE, 13, "bold"))
+        self.boton_ejecutar = ctk.CTkButton(acciones, text="Ejecutar módulo", command=self._ejecutar, fg_color=COLORES["primario"], text_color=COLORES["texto_boton"], hover_color=COLORES["primario_hover"], font=(FUENTE, 13, "bold"))
         self.boton_ejecutar.pack(side="left", padx=8)
         ctk.CTkButton(acciones, text="Abrir carpeta local", command=self._abrir_carpeta, fg_color=COLORES["panel_suave"], text_color=COLORES["texto"], hover_color=COLORES["borde"], font=(FUENTE, 13)).pack(side="left")
         

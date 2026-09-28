@@ -41,7 +41,7 @@ class VentanaPrincipal(ctk.CTk):
         )
         self.ejecucion_historial_actual = None
 
-        self.title("Aplicativo de Procesos")
+        self.title("Bancolombia | Aplicativo de Procesos")
         geo = self.preferencias.obtener("geometria", "1280x800")
         if not self.preferencias.obtener("recordar_ventana", True): geo = "1280x800"
         
@@ -49,18 +49,12 @@ class VentanaPrincipal(ctk.CTk):
         if "+" in geo: geo = geo.split("+")[0]
         self.geometry(geo)
         
-        self.minsize(980, 640)
+        self.minsize(1024, 720)
         self.protocol("WM_DELETE_WINDOW", self._cerrar)
+        self.configure(fg_color=COLORES["fondo"])
 
-        self._construir_encabezado()
         self._construir_contenido()
-        self._construir_pie()
         
-        if (self.preferencias.obtener("recordar_sidebar", True) and 
-            self.preferencias.obtener("sidebar_colapsada", False) and 
-            not self.sidebar.colapsada):
-            self.sidebar.alternar()
-            
         try:
             if self.preferencias.obtener("recordar_ventana", True) and self.preferencias.obtener("estado_ventana") == "zoomed":
                 self.state("zoomed")
@@ -70,27 +64,25 @@ class VentanaPrincipal(ctk.CTk):
         self.sidebar.seleccionar("inicio", notificar=False)
         self._mostrar_inicio()
 
-    def _construir_encabezado(self):
-        cabecera = ctk.CTkFrame(self, fg_color="transparent")
-        cabecera.pack(fill="x", padx=20, pady=(18, 12))
-
-        izquierda = ctk.CTkFrame(cabecera, fg_color="transparent")
-        izquierda.pack(side="left", fill="x", expand=True)
-        ctk.CTkLabel(izquierda, text="Aplicativo de Procesos", text_color=COLORES["texto"], font=(FUENTE, 22, "bold")).pack(anchor="w")
-        ctk.CTkLabel(izquierda, text="Automatizaciones modulares, trazables y protegidas", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(anchor="w", pady=(3, 0))
-
-        version = self.configuracion.get("version", "0.2.0")
-        ctk.CTkLabel(cabecera, text=f"Versión {version}", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(side="right", anchor="n", pady=6)
-
     def _construir_contenido(self):
         cuerpo = ctk.CTkFrame(self, fg_color="transparent")
-        cuerpo.pack(fill="both", expand=True, padx=20, pady=(0, 12))
+        cuerpo.pack(fill="both", expand=True)
 
         self.sidebar = Sidebar(cuerpo, on_navegar=self._navegar)
         self.sidebar.pack(side="left", fill="y")
 
-        self.panel_principal = ctk.CTkFrame(cuerpo, fg_color=COLORES["fondo"], border_width=1, border_color=COLORES["borde"])
-        self.panel_principal.pack(side="left", fill="both", expand=True, padx=(12, 0))
+        self.panel_principal = ctk.CTkFrame(cuerpo, fg_color=COLORES["fondo"], corner_radius=0)
+        self.panel_principal.pack(side="left", fill="both", expand=True)
+
+        self.contenedor_paginas = ctk.CTkFrame(self.panel_principal, fg_color="transparent")
+        self.contenedor_paginas.pack(side="top", fill="both", expand=True)
+
+        # Footer de seguridad
+        pie = ctk.CTkFrame(self.panel_principal, fg_color="transparent")
+        pie.pack(side="bottom", fill="x", padx=36, pady=(0, 20))
+        
+        ctk.CTkLabel(pie, text="💡  Recuerda mantener tus credenciales seguras y no compartir los resultados fuera de los canales autorizados.", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(side="left")
+        ctk.CTkLabel(pie, text="Seguridad   |   Confidencialidad   |   Integridad", text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).pack(side="right")
 
     def _navegar(self, pagina):
         if self.en_ejecucion and pagina != self.pagina_actual:
@@ -106,19 +98,28 @@ class VentanaPrincipal(ctk.CTk):
         elif pagina == "monitoreo": self._mostrar_monitoreo()
         elif pagina == "configuracion": self._mostrar_configuracion()
 
+    def _limpiar_panel(self):
+        for elemento in self.contenedor_paginas.winfo_children():
+            elemento.destroy()
+        self.campos = {}
+
+    def _mostrar_inicio(self):
+        self._limpiar_panel()
+        dashboard = DashboardPage(self.contenedor_paginas, self.registro, self._abrir_proyecto_desde_catalogo)
+        dashboard.pack(fill="both", expand=True)
+
     def _mostrar_procesos(self):
         self._limpiar_panel()
-        pagina = PaginaProcesos(self.panel_principal, self.registro, self._abrir_proyecto_desde_catalogo)
+        pagina = PaginaProcesos(self.contenedor_paginas, self.registro, self._abrir_proyecto_desde_catalogo)
         pagina.pack(fill="both", expand=True)
 
     def _mostrar_monitoreo(self):
-        # Oculta la vista actual sin bloquear la interfaz mientras Monitoreo aparece.
-        for widget in self.panel_principal.winfo_children():
+        for widget in self.contenedor_paginas.winfo_children():
             widget.pack_forget()
 
         pagina = self.pagina_monitoreo_cache
         if pagina is None or not pagina.winfo_exists():
-            pagina = PaginaMonitoreo(self.panel_principal, self.historial)
+            pagina = PaginaMonitoreo(self.contenedor_paginas, self.historial)
             self.pagina_monitoreo_cache = pagina
 
         pagina.pack(fill="both", expand=True)
@@ -126,7 +127,7 @@ class VentanaPrincipal(ctk.CTk):
 
     def _mostrar_configuracion(self):
         self._limpiar_panel()
-        pagina = PaginaConfiguracion(self.panel_principal, self.preferencias, self.configuracion.get("version", "0.4.0"), len(self.registro.listar()), on_guardar=self._aplicar_preferencias_en_ejecucion)
+        pagina = PaginaConfiguracion(self.contenedor_paginas, self.preferencias, self.configuracion.get("version", "0.4.0"), len(self.registro.listar()), on_guardar=self._aplicar_preferencias_en_ejecucion)
         pagina.pack(fill="both", expand=True)
 
     def _aplicar_preferencias_en_ejecucion(self, datos):
@@ -143,14 +144,7 @@ class VentanaPrincipal(ctk.CTk):
         for widget in self.winfo_children(): widget.destroy()
         
         self.configure(fg_color=COLORES["fondo"])
-        self._construir_encabezado()
         self._construir_contenido()
-        self._construir_pie()
-
-        if (self.preferencias.obtener("recordar_sidebar", True) and 
-            self.preferencias.obtener("sidebar_colapsada", False) and 
-            not self.sidebar.colapsada):
-            self.sidebar.alternar()
 
         self.pagina_actual = pagina_destino
         self.sidebar.seleccionar(pagina_destino, notificar=False)
@@ -164,24 +158,6 @@ class VentanaPrincipal(ctk.CTk):
         self.sidebar.seleccionar("procesos", notificar=False)
         self._seleccionar_proyecto(identificador)
 
-    def _construir_pie(self):
-        pie = ctk.CTkFrame(self, fg_color="transparent")
-        pie.pack(fill="x", padx=20, pady=(0, 12))
-        self.estado_global = ctk.CTkLabel(pie, text="Listo", text_color=COLORES["texto_secundario"], font=(FUENTE, 12))
-        self.estado_global.pack(side="left")
-        ctk.CTkLabel(pie, text="No se publican resultados corporativos desde esta fase.", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(side="right")
-
-    def _limpiar_panel(self):
-        self.pagina_monitoreo_cache = None
-        for elemento in self.panel_principal.winfo_children():
-            elemento.destroy()
-        self.campos = {}
-
-    def _mostrar_inicio(self):
-        self._limpiar_panel()
-        dashboard = DashboardPage(self.panel_principal, self.registro, self._abrir_proyecto_desde_catalogo)
-        dashboard.pack(fill="both", expand=True)
-
     def _seleccionar_proyecto(self, identificador):
         if self.en_ejecucion:
             messagebox.showwarning("Proceso en ejecución", "Espere a que termine la ejecución actual.")
@@ -193,7 +169,7 @@ class VentanaPrincipal(ctk.CTk):
         disponibilidad = self.proyecto_actual.validar_disponibilidad()
         self._limpiar_panel()
 
-        self.scroll = ctk.CTkScrollableFrame(self.panel_principal, fg_color="transparent")
+        self.scroll = ctk.CTkScrollableFrame(self.contenedor_paginas, fg_color="transparent")
         self.scroll.pack(fill="both", expand=True)
 
         cabecera = ctk.CTkFrame(self.scroll, fg_color="transparent")
@@ -204,16 +180,11 @@ class VentanaPrincipal(ctk.CTk):
         color_disp = COLORES["verde"] if disponibilidad["disponible"] else COLORES["rojo"]
         ctk.CTkLabel(cabecera, text=disponibilidad["mensaje"], text_color=color_disp, font=(FUENTE, 13, "bold")).pack(anchor="w", pady=(8, 0))
 
-        formulario = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel"], corner_radius=8, border_width=1, border_color=COLORES["borde"])
+        formulario = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])
         formulario.pack(fill="x", padx=30, pady=10)
 
         for fila, campo in enumerate(self.proyecto_actual.obtener_campos_configuracion()):
             self._crear_campo(formulario, fila, campo)
-
-        if identificador == "comisiones":
-            self._crear_aviso("Las diferencias de conciliación son informativas y no bloquean la generación del informe.", COLORES.get("fondo_aviso", "#FFF7ED"), COLORES["amarillo"])
-        elif identificador == "inversiones":
-            self._crear_aviso("Inversiones permanece en modo local protegido. La publicación corporativa está bloqueada.", COLORES.get("fondo_aviso", "#F5F3FF"), COLORES["violeta"])
 
         acciones = ctk.CTkFrame(self.scroll, fg_color="transparent")
         acciones.pack(fill="x", padx=30, pady=(12, 8))
@@ -226,7 +197,7 @@ class VentanaPrincipal(ctk.CTk):
         self.boton_abrir_archivo = ctk.CTkButton(acciones, text="Abrir informe", command=self._abrir_ultimo_archivo, state="disabled", fg_color=COLORES["panel_suave"], text_color=COLORES["texto"], font=(FUENTE, 13))
         self.boton_abrir_archivo.pack(side="left", padx=8)
 
-        self.progreso = ctk.CTkProgressBar(self.scroll, mode="determinate", progress_color=COLORES["primario"])
+        self.progreso = ctk.CTkProgressBar(self.scroll, mode="determinate", progress_color=COLORES["verde"])
         self.progreso.set(0)
         self.progreso.pack(fill="x", padx=30, pady=(20, 4))
 
@@ -238,7 +209,7 @@ class VentanaPrincipal(ctk.CTk):
             self.consola.pack(fill="x", padx=30, pady=(12, 8))
             self.consola.configure(state="disabled")
 
-        self.panel_resultado = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel_suave"], border_width=1, border_color=COLORES["borde"])
+        self.panel_resultado = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel_suave"], border_width=1, border_color=COLORES["borde"], corner_radius=12)
         self.panel_resultado.pack(fill="x", padx=30, pady=(10, 24))
         ctk.CTkLabel(self.panel_resultado, text="El resumen de la última ejecución aparecerá aquí.", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(anchor="w", padx=14, pady=12)
         
@@ -288,11 +259,6 @@ class VentanaPrincipal(ctk.CTk):
             ctk.CTkButton(padre, text="Seleccionar", command=lambda var=variable: self._seleccionar_carpeta(var), fg_color=COLORES["panel_suave"], text_color=COLORES["texto"], hover_color=COLORES["borde"], font=(FUENTE, 12)).grid(row=fila, column=2, padx=(0, 16), pady=10)
 
         self.campos[campo["id"]] = {"variable": variable, "tipo": tipo}
-
-    def _crear_aviso(self, texto, fondo, color):
-        aviso = ctk.CTkFrame(self.scroll, fg_color=fondo, corner_radius=6)
-        aviso.pack(fill="x", padx=30, pady=(8, 4))
-        ctk.CTkLabel(aviso, text=texto, text_color=color, font=(FUENTE, 12, "bold"), wraplength=700, justify="left").pack(anchor="w", padx=16, pady=12)
 
     def _seleccionar_carpeta(self, variable):
         ruta = filedialog.askdirectory(title="Seleccione una carpeta local")
@@ -442,14 +408,14 @@ class VentanaPrincipal(ctk.CTk):
             for columna in range(3): rejilla.grid_columnconfigure(columna, weight=1)
             
             for indice, (nombre, valor) in enumerate(disponibles):
-                tarjeta = ctk.CTkFrame(rejilla, fg_color=COLORES["panel"], border_width=1, border_color=COLORES["borde"])
+                tarjeta = ctk.CTkFrame(rejilla, fg_color=COLORES["panel"], border_width=1, border_color=COLORES["borde"], corner_radius=8)
                 tarjeta.grid(row=indice // 3, column=indice % 3, sticky="nsew", padx=4, pady=4)
                 ctk.CTkLabel(tarjeta, text=nombre, text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).pack(anchor="w", padx=10, pady=(8, 2))
                 ctk.CTkLabel(tarjeta, text=str(valor), text_color=COLORES["texto"], font=(FUENTE, 14, "bold")).pack(anchor="w", padx=10, pady=(0, 8))
 
         archivos = resultado.get("archivos_generados", [])
         if archivos:
-            ctk.CTkLabel(self.panel_resultado, text=f"Informe: {archivos[0]}", wraplength=760, justify="left", text_color=COLORES["primario"], font=(FUENTE, 11)).pack(anchor="w", padx=14, pady=(0, 12))
+            ctk.CTkLabel(self.panel_resultado, text=f"Informe: {archivos[0]}", wraplength=760, justify="left", text_color=COLORES["texto"], font=(FUENTE, 11)).pack(anchor="w", padx=14, pady=(0, 12))
 
     def _abrir_ultimo_archivo(self):
         if not self.ultimo_resultado: return

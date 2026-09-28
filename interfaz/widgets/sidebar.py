@@ -1,69 +1,82 @@
 import customtkinter as ctk
-from interfaz.estilos import FUENTE
+from interfaz.estilos import COLORES, FUENTE
 
 class Sidebar(ctk.CTkFrame):
-    ANCHO_EXPANDIDO = 210
-    ANCHO_COLAPSADO = 68
-
     def __init__(self, parent, on_navegar=None):
-        super().__init__(parent, width=self.ANCHO_EXPANDIDO, corner_radius=0, fg_color="transparent")
-        self.pack_propagate(False)
+        super().__init__(parent, fg_color=COLORES["sidebar"], corner_radius=0)
         self.on_navegar = on_navegar
-        self.colapsada = False
-        self.seleccion = "inicio"
         self.botones = {}
+        self.colapsada = False
 
+        self._construir()
+
+    def _construir(self):
         cabecera = ctk.CTkFrame(self, fg_color="transparent")
-        cabecera.pack(fill="x", padx=10, pady=(12, 18))
+        cabecera.pack(fill="x", padx=16, pady=(20, 30))
+
+        # Logo text Bancolombia
+        self.etiqueta_logo = ctk.CTkLabel(
+            cabecera, text="☰ Bancolombia", 
+            text_color=COLORES["blanco"], font=(FUENTE, 18, "bold")
+        )
+        self.etiqueta_logo.pack(anchor="w", padx=6)
         
-        # Logo placeholder
-        ctk.CTkLabel(cabecera, text="AP", fg_color="#2563EB", text_color="white",
-                     font=(FUENTE, 14, "bold"), width=32, height=32, corner_radius=6).pack(side="left")
-                     
-        self.btn_colapsar = ctk.CTkButton(cabecera, text="<", command=self.alternar,
-                                        width=28, height=28, corner_radius=14, fg_color="transparent",
-                                        hover_color=("gray85", "gray25"), text_color=("gray20", "gray80"),
-                                        font=(FUENTE, 16))
-        self.btn_colapsar.pack(side="right")
-        
-        self.opciones = [
-            ("inicio", "⌂", "Inicio"),
+        self.etiqueta_sub = ctk.CTkLabel(
+            cabecera, text="Aplicativo de Procesos", 
+            text_color=COLORES["amarillo"], font=(FUENTE, 10, "bold")
+        )
+        self.etiqueta_sub.pack(anchor="w", padx=28)
+
+        opciones = [
+            ("inicio", "🏠", "Inicio"),
             ("procesos", "▦", "Procesos"),
-            ("monitoreo", "◉", "Monitoreo"),
+            ("monitoreo", "📊", "Monitoreo"),
             ("configuracion", "⚙", "Configuración"),
         ]
-        
-        for clave, icono, texto in self.opciones:
-            boton = ctk.CTkButton(self, text=f"{icono}   {texto}", anchor="w",
-                                  fg_color="transparent", text_color=("gray20", "gray90"),
-                                  hover_color=("gray85", "gray25"),
-                                  font=(FUENTE, 13), height=40, corner_radius=8,
-                                  command=lambda c=clave: self.seleccionar(c, notificar=True))
-            boton.pack(fill="x", padx=12, pady=3)
-            self.botones[clave] = boton
-            
-        self.seleccionar("inicio", notificar=False)
 
-    def seleccionar(self, clave, notificar=False):
-        self.seleccion = clave
-        for nombre, boton in self.botones.items():
-            activo = nombre == clave
-            if activo:
-                boton.configure(fg_color=("#EFF6FF", "#1E3A5F"), text_color=("#2563EB", "#60A5FA"), font=(FUENTE, 13, "bold"))
+        self.contenedor_botones = ctk.CTkFrame(self, fg_color="transparent")
+        self.contenedor_botones.pack(fill="x", pady=10)
+
+        for id_opcion, icono, texto in opciones:
+            boton = ctk.CTkButton(
+                self.contenedor_botones, text=f"  {icono}    {texto}", anchor="w",
+                fg_color="transparent", text_color=COLORES["sidebar_texto"], 
+                hover_color="#333333", font=(FUENTE, 13), height=40, corner_radius=8,
+                command=lambda op=id_opcion: self._al_clic(op)
+            )
+            boton.pack(fill="x", padx=12, pady=4)
+            self.botones[id_opcion] = boton
+
+        # Bottom graphic area
+        spacer = ctk.CTkFrame(self, fg_color="transparent")
+        spacer.pack(fill="y", expand=True)
+
+        bottom_frame = ctk.CTkFrame(self, fg_color="transparent")
+        bottom_frame.pack(side="bottom", fill="x", pady=(0, 0))
+        
+        # Simple graphic representation
+        curve = ctk.CTkLabel(bottom_frame, text="", bg_color=COLORES["amarillo"], height=4)
+        curve.pack(fill="x")
+        
+        self.etiqueta_juntos = ctk.CTkLabel(
+            bottom_frame, text="Juntos\nhacemos que\nlas cosas pasen", 
+            text_color=COLORES["blanco"], font=(FUENTE, 12), justify="left"
+        )
+        self.etiqueta_juntos.pack(anchor="w", padx=20, pady=20)
+
+    def _al_clic(self, id_opcion):
+        if self.on_navegar:
+            self.on_navegar(id_opcion)
+
+    def seleccionar(self, id_opcion, notificar=True):
+        for op, boton in self.botones.items():
+            if op == id_opcion:
+                boton.configure(fg_color=COLORES["sidebar_activo"], text_color=COLORES["sidebar_texto_activo"], hover_color=COLORES["primario_hover"], font=(FUENTE, 13, "bold"))
             else:
-                boton.configure(fg_color="transparent", text_color=("gray20", "gray90"), font=(FUENTE, 13, "normal"))
-                
+                boton.configure(fg_color="transparent", text_color=COLORES["sidebar_texto"], hover_color="#333333", font=(FUENTE, 13, "normal"))
         if notificar and self.on_navegar:
-            self.update_idletasks()
-            self.after_idle(lambda: self.on_navegar(clave))
+            self.on_navegar(id_opcion)
 
     def alternar(self):
-        self.colapsada = not self.colapsada
-        self.configure(width=self.ANCHO_COLAPSADO if self.colapsada else self.ANCHO_EXPANDIDO)
-        self.btn_colapsar.configure(text=">" if self.colapsada else "<")
-        
-        for clave, icono, texto in self.opciones:
-            if self.colapsada:
-                self.botones[clave].configure(text=icono, anchor="center")
-            else:
-                self.botones[clave].configure(text=f"{icono}   {texto}", anchor="w")
+        # We don't implement collapse for the redesign since the mockup shows a full fixed sidebar
+        pass

@@ -16,24 +16,38 @@ COLORES = {
     "azul": "#59CBE8",
 
     # Colores lógicos de la interfaz (Adaptables Claro/Oscuro)
-    "fondo": ("#F9F9F9", "#1E1E1E"),
-    "panel": ("#FFFFFF", "#2C2A29"),
-    "panel_suave": ("#F0F0F0", "#3A3837"),
+    "fondo": ("#F5F7F9", "#111111"), # Light grey background as in mockup
+    "panel": ("#FFFFFF", "#212121"), # White cards
+    "panel_suave": ("#F0F3F7", "#2C2A29"), # Very light grey for some backgrounds
     "texto": ("#2C2A29", "#FFFFFF"),
     "texto_secundario": ("#666666", "#A0A0A0"),
-    "borde": ("#E0E0E0", "#4A4847"),
+    "borde": ("#E0E5EC", "#333333"),
     
-    # Estados
-    "verde": ("#00C389", "#00C389"),
-    "amarillo_estado": ("#FFB300", "#FFB300"),
-    "rojo": ("#D32F2F", "#EF5350"), # Rojo estándar para errores
+    # Estados y Alertas
+    "verde": ("#008A4D", "#008A4D"), # Darker green for text on pills
+    "fondo_pill_verde": ("#E0F2E9", "#1C3326"), # Light green pill bg
+    "amarillo_estado": ("#FDDA24", "#FDDA24"),
+    "rojo": ("#D32F2F", "#EF5350"),
     "consola": ("#2C2A29", "#121212"),
     "consola_texto": ("#FFFFFF", "#E0E0E0"),
     
-    # Botones primarios (Amarillo Macondo)
+    # Sidebar
+    "sidebar": ("#1E1E1E", "#000000"),
+    "sidebar_texto": ("#E0E0E0", "#E0E0E0"),
+    "sidebar_activo": ("#FDDA24", "#FDDA24"),
+    "sidebar_texto_activo": ("#2C2A29", "#2C2A29"),
+    
+    # Botones primarios
     "primario": ("#FDDA24", "#FDDA24"),
     "primario_hover": ("#E5C520", "#E5C520"),
-    "texto_boton": ("#2C2A29", "#2C2A29"), # El texto sobre el amarillo siempre debe ser oscuro
+    "texto_boton": ("#2C2A29", "#2C2A29"), 
+    
+    # Iconos y tarjetas grises
+    "fondo_icono_gris": ("#F2F4F7", "#333333"),
+    "icono_gris": ("#666666", "#AAAAAA"),
+    
+    # Botones modulo claro
+    "fondo_modulo": ("#FFF8D6", "#443311"), # Light yellow background for process icons
 }
 
 def aplicar_tema(nombre):

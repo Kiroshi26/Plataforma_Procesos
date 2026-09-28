@@ -47,10 +47,6 @@ COLORES = {
     # Botones modulo claro
     "fondo_modulo": ("#FFF8D6", "#443311"), # Light yellow background for process icons
 }
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 def aplicar_tema(nombre):
     modo = "light" if nombre == "claro" else "dark"
     ctk.set_appearance_mode(modo)

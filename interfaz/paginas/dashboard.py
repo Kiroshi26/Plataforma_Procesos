@@ -170,6 +170,7 @@ class DashboardPage(ctk.CTkScrollableFrame):
         ctk.CTkLabel(c, text=titulo, text_color=COLORES["texto"], font=(FUENTE, 14, "bold")).pack()
         ctk.CTkLabel(c, text=sub, text_color=COLORES["texto_secundario"], font=(FUENTE, 11), wraplength=120, justify="center").pack(pady=(2, 20))
         return c
+<<<<<<< HEAD
 =======
                 
         cabecera = ctk.CTkFrame(self, fg_color="transparent")
@@ -232,3 +233,5 @@ class DashboardPage(ctk.CTkScrollableFrame):
                       command=lambda: self.on_abrir_proceso and self.on_abrir_proceso(meta["id"])).pack(anchor="e", padx=15, pady=15)
         return card
 >>>>>>> Stashed changes
+=======
+>>>>>>> 6453774 (UI: rediseño completo de la interfaz según mockup referencial)

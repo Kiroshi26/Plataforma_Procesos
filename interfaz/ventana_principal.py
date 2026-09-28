@@ -114,7 +114,10 @@ class VentanaPrincipal(ctk.CTk):
         pagina.pack(fill="both", expand=True)
 
     def _mostrar_monitoreo(self):
+<<<<<<< HEAD
 <<<<<<< Updated upstream
+=======
+>>>>>>> 6453774 (UI: rediseño completo de la interfaz según mockup referencial)
         for widget in self.contenedor_paginas.winfo_children():
             widget.pack_forget()
 
@@ -162,6 +165,7 @@ class VentanaPrincipal(ctk.CTk):
         self.sidebar.seleccionar("procesos", notificar=False)
         self._seleccionar_proyecto(identificador)
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
     def _construir_pie(self):
@@ -182,6 +186,8 @@ class VentanaPrincipal(ctk.CTk):
         dashboard.pack(fill="both", expand=True)
 
 >>>>>>> Stashed changes
+=======
+>>>>>>> 6453774 (UI: rediseño completo de la interfaz según mockup referencial)
     def _seleccionar_proyecto(self, identificador):
         if self.en_ejecucion:
             messagebox.showwarning("Proceso en ejecución", "Espere a que termine la ejecución actual.")
@@ -204,11 +210,15 @@ class VentanaPrincipal(ctk.CTk):
         color_disp = COLORES["verde"] if disponibilidad["disponible"] else COLORES["rojo"]
         ctk.CTkLabel(cabecera, text=disponibilidad["mensaje"], text_color=color_disp, font=(FUENTE, 13, "bold")).pack(anchor="w", pady=(8, 0))
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
         formulario = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])
 =======
         formulario = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel"], corner_radius=14, border_width=1, border_color=COLORES["borde"])
 >>>>>>> Stashed changes
+=======
+        formulario = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])
+>>>>>>> 6453774 (UI: rediseño completo de la interfaz según mockup referencial)
         formulario.pack(fill="x", padx=30, pady=10)
         ctk.CTkLabel(formulario, text="Configuración del proceso", text_color=COLORES["texto"], font=(FUENTE, 16, "bold")).grid(row=0, column=0, columnspan=3, sticky="w", padx=16, pady=(14, 1))
         ctk.CTkLabel(formulario, text="Define los parámetros necesarios antes de ejecutar.", text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).grid(row=1, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 7))
@@ -242,11 +252,15 @@ class VentanaPrincipal(ctk.CTk):
             self.consola.pack(fill="x", padx=30, pady=(12, 8))
             self.consola.configure(state="disabled")
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
         self.panel_resultado = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel_suave"], border_width=1, border_color=COLORES["borde"], corner_radius=12)
 =======
         self.panel_resultado = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel_suave"], corner_radius=14, border_width=1, border_color=COLORES["borde"])
 >>>>>>> Stashed changes
+=======
+        self.panel_resultado = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel_suave"], border_width=1, border_color=COLORES["borde"], corner_radius=12)
+>>>>>>> 6453774 (UI: rediseño completo de la interfaz según mockup referencial)
         self.panel_resultado.pack(fill="x", padx=30, pady=(10, 24))
         ctk.CTkLabel(self.panel_resultado, text="El resumen de la última ejecución aparecerá aquí.", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(anchor="w", padx=14, pady=12)
         

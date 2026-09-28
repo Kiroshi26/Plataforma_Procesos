@@ -75,11 +75,15 @@ class Sidebar(ctk.CTkFrame):
             else:
                 boton.configure(fg_color="transparent", text_color=COLORES["sidebar_texto"], hover_color="#333333", font=(FUENTE, 13, "normal"))
         if notificar and self.on_navegar:
+<<<<<<< HEAD
 <<<<<<< Updated upstream
             self.on_navegar(id_opcion)
 =======
             self.on_navegar(clave)
 >>>>>>> Stashed changes
+=======
+            self.on_navegar(id_opcion)
+>>>>>>> 6453774 (UI: rediseño completo de la interfaz según mockup referencial)
 
     def alternar(self):
         # We don't implement collapse for the redesign since the mockup shows a full fixed sidebar

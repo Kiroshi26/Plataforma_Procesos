@@ -143,26 +143,11 @@ class PaginaMonitoreo(ctk.CTkFrame):
         archivos = registro.get("archivos_generados", []) or []
         if archivos:
             primer_archivo = archivos[0]
-<<<<<<< Updated upstream
-            ctk.CTkButton(acciones, text="Abrir archivo", fg_color=COLORES["primario"], text_color=COLORES["texto_boton"],
-                          hover_color=COLORES["primario_hover"], font=(FUENTE, 12, "bold"),
-                          corner_radius=6, command=lambda ruta=primer_archivo: self._abrir_archivo(ruta)).pack(side="left")
 
-            ctk.CTkButton(acciones, text="Abrir carpeta", fg_color=COLORES["panel_suave"], text_color=COLORES["texto"],
-                          font=(FUENTE, 12), corner_radius=6, border_width=1, border_color=COLORES["borde"],
-                          hover_color=COLORES["borde"],
-                          command=lambda ruta=primer_archivo: self._abrir_carpeta(ruta)).pack(side="left", padx=10)
-
-        ctk.CTkButton(acciones, text="Detalles", fg_color=COLORES["panel_suave"], text_color=COLORES["texto"],
-                      font=(FUENTE, 12), corner_radius=6, border_width=1, border_color=COLORES["borde"],
-                      hover_color=COLORES["borde"],
-                      command=lambda dato=registro: self._mostrar_detalles(dato)).pack(side="right")
-
-=======
             ctk.CTkButton(acciones, text="Abrir archivo", fg_color=COLORES["primario"], text_color="#111111", hover_color=COLORES["primario_hover"], font=(FUENTE, 11, "bold"), corner_radius=7, command=lambda ruta=primer_archivo: self._abrir_archivo(ruta)).pack(side="left")
             ctk.CTkButton(acciones, text="Abrir carpeta", fg_color=COLORES["panel_suave"], text_color=COLORES["texto"], font=(FUENTE, 11), corner_radius=7, border_width=1, border_color=COLORES["borde"], hover_color=COLORES["borde"], command=lambda ruta=primer_archivo: self._abrir_carpeta(ruta)).pack(side="left", padx=8)
         ctk.CTkButton(acciones, text="Detalles", fg_color=COLORES["panel_suave"], text_color=COLORES["texto"], font=(FUENTE, 11), corner_radius=7, border_width=1, border_color=COLORES["borde"], hover_color=COLORES["borde"], command=lambda dato=registro: self._mostrar_detalles(dato)).pack(side="right")
->>>>>>> Stashed changes
+
         return tarjeta
 
     @staticmethod

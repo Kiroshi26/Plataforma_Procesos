@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from pathlib import Path
 from tkinter import messagebox
+
 from interfaz.estilos import COLORES, FUENTE
 
 
@@ -23,7 +24,7 @@ class PaginaConfiguracion(ctk.CTkScrollableFrame):
     def _construir(self, version, total_procesos):
         cabecera = ctk.CTkFrame(self, fg_color="transparent")
         cabecera.pack(fill="x", padx=28, pady=(24, 12))
-        ctk.CTkLabel(cabecera, text="Configuración", text_color=COLORES["texto"], font=(FUENTE, 28, "bold")).pack(anchor="w")
+        ctk.CTkLabel(cabecera, text="Configuración", text_color=COLORES["texto"], font=(FUENTE, 30, "bold")).pack(anchor="w")
         ctk.CTkLabel(cabecera, text="Personaliza tu experiencia en el Aplicativo de Procesos.", text_color=COLORES["texto_secundario"], font=(FUENTE, 14)).pack(anchor="w", pady=(3, 0))
 
         contenido = ctk.CTkFrame(self, fg_color="transparent")
@@ -45,20 +46,20 @@ class PaginaConfiguracion(ctk.CTkScrollableFrame):
         )
         selector.pack(fill="x", padx=16, pady=(14, 10))
         selector.set("Claro" if self.tema.get() == "claro" else "Oscuro")
-        ctk.CTkLabel(apariencia, text="El tema se guarda para la próxima vez que abras AP.", text_color=COLORES["texto_secundario"], font=(FUENTE, 11), wraplength=430, justify="left").pack(anchor="w", padx=16, pady=(0, 14))
+        ctk.CTkLabel(apariencia, text="El tema se conserva para la próxima sesión.", text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).pack(anchor="w", padx=16, pady=(0, 14))
 
         interfaz = self._seccion(contenido, "Interfaz", "Controla cómo se comporta la ventana.")
         interfaz.grid(row=0, column=1, sticky="nsew", padx=7, pady=7)
-        self._switch(interfaz, "Recordar tamaño y posición de la ventana", self.recordar_ventana)
-        self._switch(interfaz, "Recordar estado de la barra lateral", self.recordar_sidebar)
-        self._switch(interfaz, "Mostrar consola durante la ejecución", self.mostrar_consola)
+        self._check(interfaz, "Recordar tamaño y posición de la ventana", self.recordar_ventana)
+        self._check(interfaz, "Recordar estado de la barra lateral", self.recordar_sidebar)
+        self._check(interfaz, "Mostrar consola durante la ejecución", self.mostrar_consola)
 
         comportamiento = self._seccion(contenido, "Comportamiento", "Define acciones automáticas y confirmaciones.")
         comportamiento.grid(row=1, column=0, sticky="nsew", padx=7, pady=7)
-        self._switch(comportamiento, "Confirmar cierre si hay un proceso en ejecución", self.confirmar_cierre)
-        self._switch(comportamiento, "Abrir resultado automáticamente al finalizar", self.abrir_resultado)
+        self._check(comportamiento, "Confirmar cierre si hay un proceso en ejecución", self.confirmar_cierre)
+        self._check(comportamiento, "Abrir resultado automáticamente al finalizar", self.abrir_resultado)
 
-        historial = self._seccion(contenido, "Historial", "Ubicación utilizada para registrar las ejecuciones.")
+        historial = self._seccion(contenido, "Historial", "Ubicación donde AP registra las ejecuciones.")
         historial.grid(row=1, column=1, sticky="nsew", padx=7, pady=7)
         ruta_historial = self.preferencias.obtener("historial", r"C:\Proyectos\pruebas\Historial_AP")
         ctk.CTkLabel(historial, text="Ubicación actual", text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).pack(anchor="w", padx=16, pady=(12, 3))
@@ -70,11 +71,11 @@ class PaginaConfiguracion(ctk.CTkScrollableFrame):
         info.grid(row=2, column=0, sticky="nsew", padx=7, pady=7)
         datos = ctk.CTkFrame(info, fg_color="transparent")
         datos.pack(fill="x", padx=16, pady=(12, 14))
-        ctk.CTkLabel(datos, text="Versión", text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).grid(row=0, column=0, sticky="w", pady=3)
-        ctk.CTkLabel(datos, text=str(version), text_color=COLORES["texto"], font=(FUENTE, 12, "bold")).grid(row=0, column=1, sticky="e", pady=3)
-        ctk.CTkLabel(datos, text="Procesos registrados", text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).grid(row=1, column=0, sticky="w", pady=3)
-        ctk.CTkLabel(datos, text=str(total_procesos), text_color=COLORES["texto"], font=(FUENTE, 12, "bold")).grid(row=1, column=1, sticky="e", pady=3)
-        datos.grid_columnconfigure(0, weight=1); datos.grid_columnconfigure(1, weight=1)
+        ctk.CTkLabel(datos, text="Versión", text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).grid(row=0, column=0, sticky="w", pady=4)
+        ctk.CTkLabel(datos, text=str(version), text_color=COLORES["texto"], font=(FUENTE, 12, "bold")).grid(row=0, column=1, sticky="e", pady=4)
+        ctk.CTkLabel(datos, text="Procesos registrados", text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).grid(row=1, column=0, sticky="w", pady=4)
+        ctk.CTkLabel(datos, text=str(total_procesos), text_color=COLORES["texto"], font=(FUENTE, 12, "bold")).grid(row=1, column=1, sticky="e", pady=4)
+        datos.grid_columnconfigure((0, 1), weight=1)
 
         restablecer = self._seccion(contenido, "Restablecer", "Vuelve a la configuración predeterminada.")
         restablecer.grid(row=2, column=1, sticky="nsew", padx=7, pady=7)
@@ -93,8 +94,17 @@ class PaginaConfiguracion(ctk.CTkScrollableFrame):
             ctk.CTkLabel(panel, text=subtitulo, text_color=COLORES["texto_secundario"], font=(FUENTE, 11), wraplength=440, justify="left").pack(anchor="w", padx=16)
         return panel
 
-    def _switch(self, parent, texto, variable):
-        ctk.CTkSwitch(parent, text=texto, variable=variable, text_color=COLORES["texto"], font=(FUENTE, 12), progress_color=COLORES["primario"], button_color=("#FFFFFF", "#FFFFFF"), button_hover_color=("#EFEFEF", "#E6E6E6")).pack(anchor="w", fill="x", padx=16, pady=7)
+    def _check(self, parent, texto, variable):
+        ctk.CTkSwitch(
+            parent,
+            text=texto,
+            variable=variable,
+            text_color=COLORES["texto"],
+            font=(FUENTE, 12),
+            progress_color=COLORES["primario"],
+            button_color=("#FFFFFF", "#FFFFFF"),
+            button_hover_color=("#EFEFEF", "#E6E6E6"),
+        ).pack(anchor="w", fill="x", padx=16, pady=7)
 
     def _guardar(self):
         datos = {

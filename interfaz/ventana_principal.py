@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 import threading
+from datetime import date
 import customtkinter as ctk
 from pathlib import Path
 from tkinter import filedialog, messagebox
@@ -35,7 +36,6 @@ class VentanaPrincipal(ctk.CTk):
         self.en_ejecucion = False
         self.ultimo_resultado = None
         self.pagina_actual = "inicio"
-        self.pagina_monitoreo_cache = None
         self.historial = HistorialEjecuciones(
             self.preferencias.obtener("historial", r"C:\Proyectos\pruebas\Historial_AP")
         )
@@ -114,6 +114,7 @@ class VentanaPrincipal(ctk.CTk):
         pagina.pack(fill="both", expand=True)
 
     def _mostrar_monitoreo(self):
+<<<<<<< Updated upstream
         for widget in self.contenedor_paginas.winfo_children():
             widget.pack_forget()
 
@@ -122,8 +123,11 @@ class VentanaPrincipal(ctk.CTk):
             pagina = PaginaMonitoreo(self.contenedor_paginas, self.historial)
             self.pagina_monitoreo_cache = pagina
 
+=======
+        self._limpiar_panel()
+        pagina = PaginaMonitoreo(self.panel_principal, self.historial)
+>>>>>>> Stashed changes
         pagina.pack(fill="both", expand=True)
-        self.after_idle(pagina.actualizar)
 
     def _mostrar_configuracion(self):
         self._limpiar_panel()
@@ -158,6 +162,26 @@ class VentanaPrincipal(ctk.CTk):
         self.sidebar.seleccionar("procesos", notificar=False)
         self._seleccionar_proyecto(identificador)
 
+<<<<<<< Updated upstream
+=======
+    def _construir_pie(self):
+        pie = ctk.CTkFrame(self, fg_color="transparent")
+        pie.pack(fill="x", padx=20, pady=(0, 12))
+        self.estado_global = ctk.CTkLabel(pie, text="Listo", text_color=COLORES["texto_secundario"], font=(FUENTE, 12))
+        self.estado_global.pack(side="left")
+        ctk.CTkLabel(pie, text="No se publican resultados corporativos desde esta fase.", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(side="right")
+
+    def _limpiar_panel(self):
+        for elemento in self.panel_principal.winfo_children():
+            elemento.destroy()
+        self.campos = {}
+
+    def _mostrar_inicio(self):
+        self._limpiar_panel()
+        dashboard = DashboardPage(self.panel_principal, self.registro, self._abrir_proyecto_desde_catalogo)
+        dashboard.pack(fill="both", expand=True)
+
+>>>>>>> Stashed changes
     def _seleccionar_proyecto(self, identificador):
         if self.en_ejecucion:
             messagebox.showwarning("Proceso en ejecución", "Espere a que termine la ejecución actual.")
@@ -174,23 +198,32 @@ class VentanaPrincipal(ctk.CTk):
 
         cabecera = ctk.CTkFrame(self.scroll, fg_color="transparent")
         cabecera.pack(fill="x", padx=30, pady=(26, 12))
-        ctk.CTkLabel(cabecera, text=metadatos["nombre"], text_color=COLORES["texto"], font=(FUENTE, 24, "bold")).pack(anchor="w")
+        ctk.CTkLabel(cabecera, text=metadatos["nombre"], text_color=COLORES["texto"], font=(FUENTE, 30, "bold")).pack(anchor="w")
         ctk.CTkLabel(cabecera, text=metadatos["descripcion"], text_color=COLORES["texto_secundario"], font=(FUENTE, 14)).pack(anchor="w", pady=(4, 0))
 
         color_disp = COLORES["verde"] if disponibilidad["disponible"] else COLORES["rojo"]
         ctk.CTkLabel(cabecera, text=disponibilidad["mensaje"], text_color=color_disp, font=(FUENTE, 13, "bold")).pack(anchor="w", pady=(8, 0))
 
+<<<<<<< Updated upstream
         formulario = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])
+=======
+        formulario = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel"], corner_radius=14, border_width=1, border_color=COLORES["borde"])
+>>>>>>> Stashed changes
         formulario.pack(fill="x", padx=30, pady=10)
-
-        for fila, campo in enumerate(self.proyecto_actual.obtener_campos_configuracion()):
+        ctk.CTkLabel(formulario, text="Configuración del proceso", text_color=COLORES["texto"], font=(FUENTE, 16, "bold")).grid(row=0, column=0, columnspan=3, sticky="w", padx=16, pady=(14, 1))
+        ctk.CTkLabel(formulario, text="Define los parámetros necesarios antes de ejecutar.", text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).grid(row=1, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 7))
+        for fila, campo in enumerate(self.proyecto_actual.obtener_campos_configuracion(), start=2):
             self._crear_campo(formulario, fila, campo)
 
         acciones = ctk.CTkFrame(self.scroll, fg_color="transparent")
         acciones.pack(fill="x", padx=30, pady=(12, 8))
         
         ctk.CTkButton(acciones, text="Validar parámetros", command=self._validar, fg_color=COLORES["panel_suave"], text_color=COLORES["texto"], hover_color=COLORES["borde"], font=(FUENTE, 13)).pack(side="left")
+<<<<<<< Updated upstream
         self.boton_ejecutar = ctk.CTkButton(acciones, text="Ejecutar módulo", command=self._ejecutar, fg_color=COLORES["primario"], text_color=COLORES["texto_boton"], hover_color=COLORES["primario_hover"], font=(FUENTE, 13, "bold"))
+=======
+        self.boton_ejecutar = ctk.CTkButton(acciones, text="Ejecutar proceso  →", command=self._ejecutar, fg_color=COLORES["primario"], text_color="#111111", hover_color=COLORES["primario_hover"], font=(FUENTE, 13, "bold"))
+>>>>>>> Stashed changes
         self.boton_ejecutar.pack(side="left", padx=8)
         ctk.CTkButton(acciones, text="Abrir carpeta local", command=self._abrir_carpeta, fg_color=COLORES["panel_suave"], text_color=COLORES["texto"], hover_color=COLORES["borde"], font=(FUENTE, 13)).pack(side="left")
         
@@ -204,12 +237,16 @@ class VentanaPrincipal(ctk.CTk):
         self.etiqueta_progreso = ctk.CTkLabel(self.scroll, text="Esperando validación...", text_color=COLORES["texto_secundario"], font=(FUENTE, 12))
         self.etiqueta_progreso.pack(fill="x", padx=30)
 
-        self.consola = ctk.CTkTextbox(self.scroll, height=200, fg_color=COLORES["consola"], text_color=COLORES["consola_texto"], font=("Consolas", 12))
+        self.consola = ctk.CTkTextbox(self.scroll, height=180, corner_radius=12, fg_color=COLORES["consola"], text_color=COLORES["consola_texto"], font=("Consolas", 12))
         if self.preferencias.obtener("mostrar_consola", True):
             self.consola.pack(fill="x", padx=30, pady=(12, 8))
             self.consola.configure(state="disabled")
 
+<<<<<<< Updated upstream
         self.panel_resultado = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel_suave"], border_width=1, border_color=COLORES["borde"], corner_radius=12)
+=======
+        self.panel_resultado = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel_suave"], corner_radius=14, border_width=1, border_color=COLORES["borde"])
+>>>>>>> Stashed changes
         self.panel_resultado.pack(fill="x", padx=30, pady=(10, 24))
         ctk.CTkLabel(self.panel_resultado, text="El resumen de la última ejecución aparecerá aquí.", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(anchor="w", padx=14, pady=12)
         
@@ -222,10 +259,20 @@ class VentanaPrincipal(ctk.CTk):
         tipo = campo["tipo"]
         variable = ctk.StringVar()
 
-        if campo["id"] == "anio": variable.set("2026")
+        if campo["id"] == "anio": variable.set(str(date.today().year))
         elif campo["id"] == "mes": variable.set("7")
-        elif campo["id"] == "periodo": variable.set("2025-12")
-
+        elif campo["id"] == "periodo": variable.set("")
+        if campo["id"] == "periodo" and self.proyecto_actual.obtener_metadatos().get("id") == "inversiones":
+            hoy = date.today(); mes_ref = hoy.month - 1; anio_ref = hoy.year
+            if mes_ref == 0: mes_ref = 12; anio_ref -= 1
+            anios = [str(x) for x in range(hoy.year - 3, hoy.year + 3)]
+            variable_anio = ctk.StringVar(value=str(anio_ref))
+            variable_mes = ctk.StringVar(value=next(n for n, m in MESES if m == mes_ref))
+            box = ctk.CTkFrame(padre, fg_color="transparent"); box.grid(row=fila, column=1, sticky="ew", padx=(0,16), pady=10); box.grid_columnconfigure((0,1), weight=1)
+            ctk.CTkOptionMenu(box, variable=variable_anio, values=anios, fg_color=COLORES["panel"], text_color=COLORES["texto"], button_color=COLORES["primario"], button_hover_color=COLORES["primario_hover"]).grid(row=0,column=0,sticky="ew",padx=(0,6))
+            ctk.CTkOptionMenu(box, variable=variable_mes, values=[n for n,_ in MESES], fg_color=COLORES["panel"], text_color=COLORES["texto"], button_color=COLORES["primario"], button_hover_color=COLORES["primario_hover"]).grid(row=0,column=1,sticky="ew",padx=(6,0))
+            self.campos[campo["id"]] = {"variable":variable,"anio_visual":variable_anio,"mes_visual":variable_mes,"tipo":"periodo_inversiones"}
+            return
         if tipo == "mes":
             variable_visual = ctk.StringVar(value="Julio")
             control = ctk.CTkOptionMenu(padre, variable=variable_visual, values=[nombre for nombre, _ in MESES], fg_color=COLORES["panel"], text_color=COLORES["texto"], button_color=COLORES["primario"], button_hover_color=COLORES["primario_hover"])
@@ -274,6 +321,9 @@ class VentanaPrincipal(ctk.CTk):
             if campo["tipo"] == "mes":
                 nombre = campo["visual"].get()
                 parametros[identificador] = dict(MESES)[nombre]
+            elif campo["tipo"] == "periodo_inversiones":
+                anio = campo["anio_visual"].get(); mes = dict(MESES)[campo["mes_visual"].get()]
+                parametros[identificador] = f"{anio}-{mes:02d}"
             elif campo["tipo"] == "booleano":
                 parametros[identificador] = campo["variable"].get() == "1"
             else:

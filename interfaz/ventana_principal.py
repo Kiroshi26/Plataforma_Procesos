@@ -40,6 +40,8 @@ class VentanaPrincipal(ctk.CTk):
             self.preferencias.obtener("historial", r"C:\Proyectos\pruebas\Historial_AP")
         )
         self.ejecucion_historial_actual = None
+        
+        self.pagina_monitoreo_cache = None
 
         self.title("Bancolombia | Aplicativo de Procesos")
         geo = self.preferencias.obtener("geometria", "1280x800")
@@ -105,7 +107,13 @@ class VentanaPrincipal(ctk.CTk):
 
     def _mostrar_inicio(self):
         self._limpiar_panel()
-        dashboard = DashboardPage(self.contenedor_paginas, self.registro, self._abrir_proyecto_desde_catalogo)
+
+        dashboard = DashboardPage(
+        self.contenedor_paginas,
+        self.registro,
+        self._abrir_proyecto_desde_catalogo
+    )
+
         dashboard.pack(fill="both", expand=True)
 
     def _mostrar_procesos(self):
@@ -114,19 +122,12 @@ class VentanaPrincipal(ctk.CTk):
         pagina.pack(fill="both", expand=True)
 
     def _mostrar_monitoreo(self):
-
-
-        for widget in self.contenedor_paginas.winfo_children():
-            widget.pack_forget()
-
-        pagina = self.pagina_monitoreo_cache
-        if pagina is None or not pagina.winfo_exists():
-            pagina = PaginaMonitoreo(self.contenedor_paginas, self.historial)
-            self.pagina_monitoreo_cache = pagina
-
-
         self._limpiar_panel()
-        pagina = PaginaMonitoreo(self.panel_principal, self.historial)
+
+        pagina = PaginaMonitoreo(
+          self.contenedor_paginas,
+          self.historial
+    )
 
         pagina.pack(fill="both", expand=True)
 
@@ -159,8 +160,6 @@ class VentanaPrincipal(ctk.CTk):
         else: self._mostrar_inicio()
 
     def _abrir_proyecto_desde_catalogo(self, identificador):
-        self.pagina_actual = "procesos"
-        self.sidebar.seleccionar("procesos", notificar=False)
         self._seleccionar_proyecto(identificador)
 
 
@@ -172,15 +171,9 @@ class VentanaPrincipal(ctk.CTk):
         ctk.CTkLabel(pie, text="No se publican resultados corporativos desde esta fase.", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(side="right")
 
     def _limpiar_panel(self):
-        for elemento in self.panel_principal.winfo_children():
-            elemento.destroy()
-        self.campos = {}
-
-    def _mostrar_inicio(self):
-        self._limpiar_panel()
-        dashboard = DashboardPage(self.panel_principal, self.registro, self._abrir_proyecto_desde_catalogo)
-        dashboard.pack(fill="both", expand=True)
-
+         for elemento in self.contenedor_paginas.winfo_children():
+             elemento.destroy()
+         self.campos = {}
 
     def _seleccionar_proyecto(self, identificador):
         if self.en_ejecucion:
@@ -203,8 +196,6 @@ class VentanaPrincipal(ctk.CTk):
 
         color_disp = COLORES["verde"] if disponibilidad["disponible"] else COLORES["rojo"]
         ctk.CTkLabel(cabecera, text=disponibilidad["mensaje"], text_color=color_disp, font=(FUENTE, 13, "bold")).pack(anchor="w", pady=(8, 0))
-
-        formulario = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel"], corner_radius=14, border_width=1, border_color=COLORES["borde"])
 
         formulario = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])
 
@@ -236,8 +227,6 @@ class VentanaPrincipal(ctk.CTk):
         if self.preferencias.obtener("mostrar_consola", True):
             self.consola.pack(fill="x", padx=30, pady=(12, 8))
             self.consola.configure(state="disabled")
-
-        self.panel_resultado = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel_suave"], corner_radius=14, border_width=1, border_color=COLORES["borde"])
 
         self.panel_resultado = ctk.CTkFrame(self.scroll, fg_color=COLORES["panel_suave"], border_width=1, border_color=COLORES["borde"], corner_radius=12)
 

@@ -12,6 +12,10 @@ COLORES = {
     "naranja": "#FF7F41",
     "rosa": "#F5B6CD",
     "azul": "#59CBE8",
+    "azul_suave": ("#E3F4FA", "#13303A"),
+    "verde_suave": ("#E0F2E9", "#1C3326"),
+    "amarillo_suave": ("#FFF8D6", "#443311"),
+    "rojo_suave": ("#FDEAEA", "#3A1C1C"),
 
     # Colores lógicos de la interfaz (Adaptables Claro/Oscuro)
     "fondo": ("#F5F7F9", "#111111"), # Light grey background as in mockup
@@ -23,6 +27,7 @@ COLORES = {
     
     # Estados y Alertas
     "verde": ("#008A4D", "#008A4D"), # Darker green for text on pills
+    "verde_claro": ("#DCFCE7", "#14532D"),
     "fondo_pill_verde": ("#E0F2E9", "#1C3326"), # Light green pill bg
     "amarillo_estado": ("#FDDA24", "#FDDA24"),
     "rojo": ("#D32F2F", "#EF5350"),

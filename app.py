@@ -4,6 +4,7 @@ from pathlib import Path
 
 from integraciones.comisiones.adaptador import AdaptadorComisiones
 from integraciones.inversiones.adaptador import AdaptadorInversiones
+from integraciones.cruce_efectivo.adaptador import AdaptadorCruceEfectivo
 from nucleo.registro_proyectos import RegistroProyectos
 
 RUTA_BASE = Path(__file__).resolve().parent
@@ -20,6 +21,7 @@ def crear_registro(configuracion=None):
     registro = RegistroProyectos()
     registro.registrar(AdaptadorComisiones(rutas["comisiones"]))
     registro.registrar(AdaptadorInversiones(rutas["inversiones"]))
+    registro.registrar(AdaptadorCruceEfectivo(rutas["cruce_efectivo"]))
     return registro
 
 

@@ -22,22 +22,53 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
             text_color=COLORES["texto_secundario"],
             font=(FUENTE, 14),
         ).pack(anchor="w", pady=(3, 0))
+        
+        procesos = self.registro.listar()
 
-        procesos = registro.listar()
         disponibles = 0
-        estados = {}
-        for meta in procesos:
-            try:
-                estado = registro.obtener(meta["id"]).validar_disponibilidad()
-            except Exception as error:
-                estado = {"disponible": False, "mensaje": str(error)}
-            estados[meta["id"]] = estado
-            disponibles += int(bool(estado.get("disponible")))
 
+        estados = {}
+
+        if not hasattr(self.registro, "_cache_disponibilidad"):
+         self.registro._cache_disponibilidad = {}
+
+        for meta in procesos:
+
+         identificador = meta["id"]
+
+        if identificador not in self.registro._cache_disponibilidad:
+
+         try:
+            self.registro._cache_disponibilidad[
+                identificador
+            ] = self.registro.obtener(
+                identificador
+            ).validar_disponibilidad()
+
+         except Exception as error:
+
+            self.registro._cache_disponibilidad[
+                identificador
+            ] = {
+                "disponible": False,
+                "mensaje": str(error)
+            }
+
+        estado = self.registro._cache_disponibilidad[
+         identificador
+    ]
+
+        estados[identificador] = estado
+
+        disponibles += int(
+        bool(
+            estado.get("disponible")
+        )
+    )
         resumen = ctk.CTkFrame(self, fg_color="transparent")
         resumen.pack(fill="x", padx=22, pady=(0, 10))
         for col in range(3):
-            resumen.grid_columnconfigure(col, weight=1, uniform="resumen")
+          resumen.grid_columnconfigure(col, weight=1, uniform="resumen")
         datos = [
             ("▦", "Registrados", len(procesos), "Módulos en AP", COLORES["azul_suave"], COLORES["azul"]),
             ("✓", "Disponibles", disponibles, "Listos para ejecutar", COLORES["verde_suave"], COLORES["verde"]),
@@ -55,7 +86,7 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
         )
         panel.pack(fill="both", expand=True, padx=20, pady=(2, 22))
         ctk.CTkLabel(
-            panel,
+           panel,
             text="Procesos disponibles",
             text_color=COLORES["texto"],
             font=(FUENTE, 18, "bold"),

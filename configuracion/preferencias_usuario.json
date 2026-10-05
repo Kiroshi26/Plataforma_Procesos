@@ -1,12 +1,12 @@
 {
   "tema": "claro",
-  "recordar_ventana": true,
-  "recordar_sidebar": true,
+  "recordar_ventana": false,
+  "recordar_sidebar": false,
   "sidebar_colapsada": false,
   "mostrar_consola": true,
   "confirmar_cierre": true,
   "abrir_resultado_automaticamente": true,
-  "geometria": "1600x818+1575+232",
+  "geometria": "1280x729+38+38",
   "estado_ventana": "zoomed",
   "historial": "C:\\Proyectos\\pruebas\\Historial_AP"
 }

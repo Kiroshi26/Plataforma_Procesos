@@ -1,5 +1,5 @@
 from pathlib import Path
-import subprocess
+import sys
 
 from nucleo.contrato_proyecto import ContratoProyecto
 from nucleo.resultados import ResultadoEjecucion
@@ -14,14 +14,21 @@ class AdaptadorCruceEfectivo(ContratoProyecto):
             "id": "cruce_efectivo",
             "nombre": "Cruce de Efectivo",
             "descripcion": (
-                "Cruce automático de movimientos de efectivo "
-                "a partir de los soportes PDF."
+                "Cruce automático de movimientos "
+                "de efectivo a partir de soportes PDF."
             ),
             "estado": "DISPONIBLE",
         }
 
     def obtener_campos_configuracion(self):
-        return []
+        return [
+            {
+                "id": "criterio",
+                "etiqueta": "Criterio",
+                "tipo": "texto",
+                "requerido": True,
+            }
+        ]
 
     def validar_disponibilidad(self):
         if not self.ruta_proyecto.exists():
@@ -50,36 +57,67 @@ class AdaptadorCruceEfectivo(ContratoProyecto):
         }
 
     def validar_parametros(self, parametros):
-        return []
 
-    def ejecutar(self, parametros, reportar_evento):
-        try:
-            reportar_evento(
-                "INICIO",
-                "Abriendo aplicación de Cruce Efectivo.",
-                10,
+        errores = []
+
+        criterio = str(
+            parametros.get("criterio", "")
+        ).strip()
+
+        if not criterio:
+            errores.append(
+                "Debe ingresar un criterio."
             )
 
-            app = self.ruta_proyecto / "app.py"
+        return errores
 
-            subprocess.Popen(
-                ["python", str(app)],
-                cwd=str(self.ruta_proyecto),
+    def ejecutar(self, parametros, reportar_evento):
+
+        try:
+
+            criterio = str(
+                parametros["criterio"]
+            ).strip()
+
+            reportar_evento(
+                "INICIO",
+                f"Iniciando Cruce de Efectivo para criterio {criterio}",
+                5,
+            )
+
+            if str(self.ruta_proyecto) not in sys.path:
+                sys.path.insert(
+                    0,
+                    str(self.ruta_proyecto)
+                )
+
+            from procesos.proceso_principal import ejecutar
+
+            archivo_generado = ejecutar(
+                criterio=criterio,
+                reportar_evento=reportar_evento,
             )
 
             reportar_evento(
                 "FINALIZADO",
-                "Aplicación abierta correctamente.",
+                "Proceso ejecutado correctamente.",
                 100,
             )
 
             return ResultadoEjecucion(
                 exitoso=True,
                 estado="FINALIZADO",
-                mensaje="Cruce Efectivo iniciado correctamente.",
+                mensaje="Cruce de Efectivo ejecutado correctamente.",
+                archivos_generados=[
+                    str(archivo_generado)
+                ] if archivo_generado else [],
+                carpeta_salida=str(
+                    Path(archivo_generado).parent
+                ) if archivo_generado else None,
             ).como_diccionario()
 
         except Exception as error:
+
             reportar_evento(
                 "ERROR",
                 str(error),

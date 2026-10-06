@@ -22,7 +22,7 @@ MESES = [
     ("Mayo", 5), ("Junio", 6), ("Julio", 7), ("Agosto", 8),
     ("Septiembre", 9), ("Octubre", 10), ("Noviembre", 11),
     ("Diciembre", 12),
-]
+ ]
 
 class VentanaPrincipal(ctk.CTk):
     def __init__(self, registro, configuracion):
@@ -262,6 +262,77 @@ class VentanaPrincipal(ctk.CTk):
             control.grid(row=fila, column=1, sticky="ew", padx=(0, 16), pady=10)
             self.campos[campo["id"]] = {"variable": variable, "visual": variable_visual, "tipo": tipo}
             return
+        
+        if tipo == "anio":
+
+           variable.set("")
+
+           control = ctk.CTkEntry(
+           padre,
+           textvariable=variable,
+           fg_color=COLORES["panel"],
+           text_color=COLORES["texto"],
+        )
+
+           control.grid(
+           row=fila,
+           column=1,
+           sticky="ew",
+           padx=(0, 16),
+           pady=10,
+        )
+
+           self.campos[campo["id"]] = {
+           "variable": variable,
+           "tipo": tipo,
+        }
+
+           return
+       
+        if tipo == "mes_carpeta":
+       
+            variable_visual = ctk.StringVar(
+            value=""
+            )
+       
+            control = ctk.CTkOptionMenu(
+            padre,
+            variable=variable_visual,
+            values=[
+                "",
+                "01_ENE",
+                "02_FEB",
+                "03_MAR",
+                "04_ABR",
+                "05_MAY",
+                "06_JUN",
+                "07_JUL",
+                "08_AGO",
+                "09_SEP",
+                "10_OCT",
+                "11_NOV",
+                "12_DIC",
+               ],
+            fg_color=COLORES["panel"],
+            text_color=COLORES["texto"],
+            button_color=COLORES["primario"],
+            button_hover_color=COLORES["primario_hover"],
+            )
+       
+            control.grid(
+            row=fila,
+            column=1,
+            sticky="ew",
+            padx=(0, 16),
+            pady=10
+            )
+       
+            self.campos[campo["id"]] = {
+            "variable": variable_visual,
+            "tipo": tipo,
+            }
+       
+            return
 
         if tipo == "password":
             control = ctk.CTkEntry(padre, textvariable=variable, show="*", fg_color=COLORES["panel"], text_color=COLORES["texto"])
@@ -289,7 +360,7 @@ class VentanaPrincipal(ctk.CTk):
             ctk.CTkButton(padre, text="Seleccionar", command=lambda var=variable: self._seleccionar_carpeta(var), fg_color=COLORES["panel_suave"], text_color=COLORES["texto"], hover_color=COLORES["borde"], font=(FUENTE, 12)).grid(row=fila, column=2, padx=(0, 16), pady=10)
 
         self.campos[campo["id"]] = {"variable": variable, "tipo": tipo}
-
+        
     def _seleccionar_carpeta(self, variable):
         ruta = filedialog.askdirectory(title="Seleccione una carpeta local")
         if ruta: variable.set(ruta)
@@ -299,18 +370,49 @@ class VentanaPrincipal(ctk.CTk):
         if ruta: variable.set(ruta)
 
     def _recoger_parametros(self):
+        
         parametros = {}
+
         for identificador, campo in self.campos.items():
-            if campo["tipo"] == "mes":
-                nombre = campo["visual"].get()
-                parametros[identificador] = dict(MESES)[nombre]
-            elif campo["tipo"] == "periodo_inversiones":
-                anio = campo["anio_visual"].get(); mes = dict(MESES)[campo["mes_visual"].get()]
-                parametros[identificador] = f"{anio}-{mes:02d}"
-            elif campo["tipo"] == "booleano":
-                parametros[identificador] = campo["variable"].get() == "1"
-            else:
-                parametros[identificador] = campo["variable"].get().strip()
+
+         if campo["tipo"] == "mes":
+
+            nombre = campo["visual"].get()
+
+            parametros[identificador] = dict(MESES)[nombre]
+
+         elif campo["tipo"] == "periodo_inversiones":
+
+            anio = campo["anio_visual"].get()
+
+            mes = dict(MESES)[
+                campo["mes_visual"].get()
+            ]
+
+            parametros[identificador] = f"{anio}-{mes:02d}"
+
+         elif campo["tipo"] == "mes_carpeta":
+
+            parametros[identificador] = (
+                campo["variable"]
+                .get()
+                .strip()
+            )
+
+         elif campo["tipo"] == "booleano":
+
+            parametros[identificador] = (
+                campo["variable"].get() == "1"
+            )
+
+        else:
+
+            parametros[identificador] = (
+                campo["variable"]
+                .get()
+                .strip()
+            )
+
         return parametros
 
     def _validar(self):

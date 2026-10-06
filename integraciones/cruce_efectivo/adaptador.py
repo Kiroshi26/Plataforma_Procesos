@@ -21,14 +21,26 @@ class AdaptadorCruceEfectivo(ContratoProyecto):
         }
 
     def obtener_campos_configuracion(self):
-        return [
-            {
-                "id": "criterio",
-                "etiqueta": "Criterio",
-                "tipo": "texto",
-                "requerido": True,
-            }
-        ]
+     return [
+        {
+            "id": "criterio",
+            "etiqueta": "Criterio",
+            "tipo": "texto",
+            "requerido": True,
+        },
+        {
+            "id": "anio",
+            "etiqueta": "Año",
+            "tipo": "anio",
+            "requerido": False,
+        },
+        {
+            "id": "mes",
+            "etiqueta": "Mes",
+            "tipo": "mes_carpeta",
+            "requerido": False,
+        },
+    ]
 
     def validar_disponibilidad(self):
         if not self.ruta_proyecto.exists():
@@ -61,7 +73,16 @@ class AdaptadorCruceEfectivo(ContratoProyecto):
         errores = []
 
         criterio = str(
-            parametros.get("criterio", "")
+        
+        parametros.get("criterio", "")
+        ).strip()
+
+        anio = str(
+        parametros.get("anio", "")
+        ).strip()
+
+        periodo = str(
+        parametros.get("mes", "")
         ).strip()
 
         if not criterio:
@@ -69,21 +90,23 @@ class AdaptadorCruceEfectivo(ContratoProyecto):
                 "Debe ingresar un criterio."
             )
 
-        return errores
+            return errores
 
     def ejecutar(self, parametros, reportar_evento):
 
         try:
 
             criterio = str(
-                parametros["criterio"]
+            parametros.get("criterio", "")
             ).strip()
 
-            reportar_evento(
-                "INICIO",
-                f"Iniciando Cruce de Efectivo para criterio {criterio}",
-                5,
-            )
+            anio = str(
+            parametros.get("anio", "")
+            ).strip()
+
+            periodo = str(
+            parametros.get("mes", "")
+            ).strip()
 
             if str(self.ruta_proyecto) not in sys.path:
                 sys.path.insert(
@@ -94,8 +117,10 @@ class AdaptadorCruceEfectivo(ContratoProyecto):
             from procesos.proceso_principal import ejecutar
 
             archivo_generado = ejecutar(
-                criterio=criterio,
-                reportar_evento=reportar_evento,
+            criterio=criterio,
+            anio=anio,
+            periodo=periodo,
+            reportar_evento=reportar_evento,
             )
 
             reportar_evento(
@@ -130,3 +155,4 @@ class AdaptadorCruceEfectivo(ContratoProyecto):
                 mensaje=str(error),
                 errores=[str(error)],
             ).como_diccionario()
+            

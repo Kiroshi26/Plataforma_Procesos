@@ -18,9 +18,17 @@ from interfaz.paginas.configuracion import PaginaConfiguracion
 from interfaz.estilos import COLORES, FUENTE, aplicar_tema
 
 MESES = [
-    ("Enero", 1), ("Febrero", 2), ("Marzo", 3), ("Abril", 4),
-    ("Mayo", 5), ("Junio", 6), ("Julio", 7), ("Agosto", 8),
-    ("Septiembre", 9), ("Octubre", 10), ("Noviembre", 11),
+    ("Enero", 1),
+    ("Febrero", 2),
+    ("Marzo", 3),
+    ("Abril", 4),
+    ("Mayo", 5),
+    ("Junio", 6),
+    ("Julio", 7),
+    ("Agosto", 8),
+    ("Septiembre", 9),
+    ("Octubre", 10),
+    ("Noviembre", 11),
     ("Diciembre", 12),
  ]
 
@@ -255,12 +263,24 @@ class VentanaPrincipal(ctk.CTk):
             ctk.CTkOptionMenu(box, variable=variable_anio, values=anios, fg_color=COLORES["panel"], text_color=COLORES["texto"], button_color=COLORES["primario"], button_hover_color=COLORES["primario_hover"]).grid(row=0,column=0,sticky="ew",padx=(0,6))
             ctk.CTkOptionMenu(box, variable=variable_mes, values=[n for n,_ in MESES], fg_color=COLORES["panel"], text_color=COLORES["texto"], button_color=COLORES["primario"], button_hover_color=COLORES["primario_hover"]).grid(row=0,column=1,sticky="ew",padx=(6,0))
             self.campos[campo["id"]] = {"variable":variable,"anio_visual":variable_anio,"mes_visual":variable_mes,"tipo":"periodo_inversiones"}
+            
+            print(
+            "AGREGANDO CAMPO:",
+            campo["id"],
+            tipo
+            )
             return
         if tipo == "mes":
             variable_visual = ctk.StringVar(value="Julio")
             control = ctk.CTkOptionMenu(padre, variable=variable_visual, values=[nombre for nombre, _ in MESES], fg_color=COLORES["panel"], text_color=COLORES["texto"], button_color=COLORES["primario"], button_hover_color=COLORES["primario_hover"])
             control.grid(row=fila, column=1, sticky="ew", padx=(0, 16), pady=10)
             self.campos[campo["id"]] = {"variable": variable, "visual": variable_visual, "tipo": tipo}
+            
+            print(
+            "AGREGANDO CAMPO:",
+            campo["id"],
+            tipo
+            )
             return
         
         if tipo == "anio":
@@ -331,6 +351,14 @@ class VentanaPrincipal(ctk.CTk):
             "variable": variable_visual,
             "tipo": tipo,
             }
+            
+            print(
+            "AGREGANDO CAMPO:",
+            campo["id"],
+            tipo
+            )
+            
+            print("CAMPOS:", self.campos.keys())
        
             return
 
@@ -370,18 +398,18 @@ class VentanaPrincipal(ctk.CTk):
         if ruta: variable.set(ruta)
 
     def _recoger_parametros(self):
-        
-        parametros = {}
 
-        for identificador, campo in self.campos.items():
+     parametros = {}
 
-         if campo["tipo"] == "mes":
+     for identificador, campo in self.campos.items():
+
+        if campo["tipo"] == "mes":
 
             nombre = campo["visual"].get()
 
             parametros[identificador] = dict(MESES)[nombre]
 
-         elif campo["tipo"] == "periodo_inversiones":
+        elif campo["tipo"] == "periodo_inversiones":
 
             anio = campo["anio_visual"].get()
 
@@ -391,7 +419,7 @@ class VentanaPrincipal(ctk.CTk):
 
             parametros[identificador] = f"{anio}-{mes:02d}"
 
-         elif campo["tipo"] == "mes_carpeta":
+        elif campo["tipo"] == "mes_carpeta":
 
             parametros[identificador] = (
                 campo["variable"]
@@ -399,7 +427,7 @@ class VentanaPrincipal(ctk.CTk):
                 .strip()
             )
 
-         elif campo["tipo"] == "booleano":
+        elif campo["tipo"] == "booleano":
 
             parametros[identificador] = (
                 campo["variable"].get() == "1"
@@ -413,18 +441,47 @@ class VentanaPrincipal(ctk.CTk):
                 .strip()
             )
 
-        return parametros
+     return parametros
 
     def _validar(self):
-        if self.proyecto_actual is None: return False
-        errores = self.proyecto_actual.validar_parametros(self._recoger_parametros())
+
+        if self.proyecto_actual is None:
+         return False
+
+        parametros = self._recoger_parametros()
+
+        print("PARAMETROS =", parametros)
+        print("CAMPOS =", self.campos.keys())
+
+        errores = self.proyecto_actual.validar_parametros(
+        parametros
+    )or []
+
         if errores:
-            self._escribir_consola("VALIDACIÓN CON ERRORES:")
-            for error in errores: self._escribir_consola(f"  - {error}")
-            messagebox.showwarning("Validación", "Revise los parámetros indicados en el registro.")
-            return False
-        self._escribir_consola("Parámetros válidos para la fase actual.")
-        self.etiqueta_progreso.configure(text="Parámetros válidos.")
+         self._escribir_consola(
+         "VALIDACIÓN CON ERRORES:"
+        )
+
+        for error in errores:
+         self._escribir_consola(
+            f"  - {error}"
+            )
+
+         messagebox.showwarning(
+         "Validación",
+         "Revise los parámetros indicados en el registro."
+        )
+
+         return False
+
+        self._escribir_consola(
+        "Parámetros válidos para la fase actual."
+    )
+
+        self.etiqueta_progreso.configure(
+        text="Parámetros válidos."
+    )
+
         return True
 
     def _ejecutar(self):

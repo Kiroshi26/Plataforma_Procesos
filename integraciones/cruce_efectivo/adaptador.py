@@ -70,27 +70,26 @@ class AdaptadorCruceEfectivo(ContratoProyecto):
 
     def validar_parametros(self, parametros):
 
-        errores = []
+     errores = []
 
-        criterio = str(
-        
-        parametros.get("criterio", "")
-        ).strip()
+     criterio = str(
+         parametros.get("criterio", "")
+     ).strip()
 
-        anio = str(
-        parametros.get("anio", "")
-        ).strip()
+     anio = str(
+         parametros.get("anio", "")
+     ).strip()
 
-        periodo = str(
-        parametros.get("mes", "")
-        ).strip()
+     periodo = str(
+         parametros.get("mes", "")
+     ).strip()
 
-        if not criterio:
-            errores.append(
-                "Debe ingresar un criterio."
-            )
+     if not criterio:
+        errores.append(
+            "Debe ingresar un criterio."
+        )
 
-            return errores
+     return errores
 
     def ejecutar(self, parametros, reportar_evento):
 

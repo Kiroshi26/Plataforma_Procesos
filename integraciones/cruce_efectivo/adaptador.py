@@ -40,6 +40,12 @@ class AdaptadorCruceEfectivo(ContratoProyecto):
             "tipo": "mes_carpeta",
             "requerido": False,
         },
+        {
+            "id": "archivo_ctasbanc",
+            "etiqueta": "Archivo cuentas bancarias",
+            "tipo": "archivo_excel",
+            "requerido": False,
+        },
     ]
 
     def validar_disponibilidad(self):
@@ -93,65 +99,78 @@ class AdaptadorCruceEfectivo(ContratoProyecto):
 
     def ejecutar(self, parametros, reportar_evento):
 
-        try:
+     try:
 
-            criterio = str(
+        criterio = str(
             parametros.get("criterio", "")
-            ).strip()
+        ).strip()
 
-            anio = str(
+        anio = str(
             parametros.get("anio", "")
-            ).strip()
+        ).strip()
 
-            periodo = str(
+        periodo = str(
             parametros.get("mes", "")
-            ).strip()
+        ).strip()
 
-            if str(self.ruta_proyecto) not in sys.path:
-                sys.path.insert(
-                    0,
-                    str(self.ruta_proyecto)
-                )
+        archivo_ctasbanc = str(
+            parametros.get(
+                "archivo_ctasbanc",
+                ""
+            )
+        ).strip()
 
-            from procesos.proceso_principal import ejecutar
+        reportar_evento(
+            "INICIO",
+            f"Iniciando Cruce de Efectivo para criterio {criterio}",
+            5,
+        )
 
-            archivo_generado = ejecutar(
+        if str(self.ruta_proyecto) not in sys.path:
+            sys.path.insert(
+                0,
+                str(self.ruta_proyecto)
+            )
+
+        from procesos.proceso_principal import ejecutar
+
+        archivo_generado = ejecutar(
             criterio=criterio,
             anio=anio,
             periodo=periodo,
+            archivo_ctasbanc=archivo_ctasbanc,
             reportar_evento=reportar_evento,
-            )
+        )
 
-            reportar_evento(
-                "FINALIZADO",
-                "Proceso ejecutado correctamente.",
-                100,
-            )
+        reportar_evento(
+            "FINALIZADO",
+            "Proceso ejecutado correctamente.",
+            100,
+        )
 
-            return ResultadoEjecucion(
-                exitoso=True,
-                estado="FINALIZADO",
-                mensaje="Cruce de Efectivo ejecutado correctamente.",
-                archivos_generados=[
-                    str(archivo_generado)
-                ] if archivo_generado else [],
-                carpeta_salida=str(
-                    Path(archivo_generado).parent
-                ) if archivo_generado else None,
-            ).como_diccionario()
+        return ResultadoEjecucion(
+            exitoso=True,
+            estado="FINALIZADO",
+            mensaje="Cruce de Efectivo ejecutado correctamente.",
+            archivos_generados=[
+                str(archivo_generado)
+            ] if archivo_generado else [],
+            carpeta_salida=str(
+                Path(archivo_generado).parent
+            ) if archivo_generado else None,
+        ).como_diccionario()
 
-        except Exception as error:
+     except Exception as error:
 
-            reportar_evento(
-                "ERROR",
-                str(error),
-                100,
-            )
+        reportar_evento(
+            "ERROR",
+            str(error),
+            100,
+        )
 
-            return ResultadoEjecucion(
-                exitoso=False,
-                estado="ERROR",
-                mensaje=str(error),
-                errores=[str(error)],
-            ).como_diccionario()
-            
+        return ResultadoEjecucion(
+            exitoso=False,
+            estado="ERROR",
+            mensaje=str(error),
+            errores=[str(error)],
+        ).como_diccionario()

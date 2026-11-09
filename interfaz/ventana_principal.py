@@ -249,6 +249,45 @@ class VentanaPrincipal(ctk.CTk):
 
         tipo = campo["tipo"]
         variable = ctk.StringVar()
+        
+                # ----------------------------------
+        # NUEVO: LISTAS DESPLEGABLES
+        # ----------------------------------
+
+        if tipo == "lista":
+
+            opciones = campo.get(
+                "opciones",
+                []
+            )
+
+            if opciones:
+                variable.set(opciones[0])
+
+            control = ctk.CTkOptionMenu(
+                padre,
+                variable=variable,
+                values=opciones,
+                fg_color=COLORES["panel"],
+                text_color=COLORES["texto"],
+                button_color=COLORES["primario"],
+                button_hover_color=COLORES["primario_hover"],
+            )
+
+            control.grid(
+                row=fila,
+                column=1,
+                sticky="ew",
+                padx=(0, 16),
+                pady=10,
+            )
+
+            self.campos[campo["id"]] = {
+                "variable": variable,
+                "tipo": tipo,
+            }
+
+            return
 
         if campo["id"] == "anio": variable.set(str(date.today().year))
         elif campo["id"] == "mes": variable.set("7")

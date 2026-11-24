@@ -25,11 +25,19 @@ from nucleo.gestor_preferencias import GestorPreferencias
 from nucleo.historial_ejecuciones import HistorialEjecuciones
 
 MESES = [
-    ("Enero", 1), ("Febrero", 2), ("Marzo", 3), ("Abril", 4),
-    ("Mayo", 5), ("Junio", 6), ("Julio", 7), ("Agosto", 8),
-    ("Septiembre", 9), ("Octubre", 10), ("Noviembre", 11),
+    ("Enero", 1),
+    ("Febrero", 2),
+    ("Marzo", 3),
+    ("Abril", 4),
+    ("Mayo", 5),
+    ("Junio", 6),
+    ("Julio", 7),
+    ("Agosto", 8),
+    ("Septiembre", 9),
+    ("Octubre", 10),
+    ("Noviembre", 11),
     ("Diciembre", 12),
-]
+ ]
 
 
 class VentanaPrincipal(ctk.CTk):
@@ -44,11 +52,12 @@ class VentanaPrincipal(ctk.CTk):
         self.en_ejecucion = False
         self.ultimo_resultado = None
         self.pagina_actual = "inicio"
-        self.pagina_monitoreo_cache = None
         self.historial = HistorialEjecuciones(
             self.preferencias.obtener("historial", r"C:\Proyectos\pruebas\Historial_AP")
         )
         self.ejecucion_historial_actual = None
+        
+        self.pagina_monitoreo_cache = None
 
         self.title("Bancolombia | Aplicativo de Procesos")
         geo = self.preferencias.obtener("geometria", "1280x800")
@@ -133,7 +142,13 @@ class VentanaPrincipal(ctk.CTk):
 
     def _mostrar_inicio(self):
         self._limpiar_panel()
-        dashboard = DashboardPage(self.contenedor_paginas, self.registro, self._abrir_proyecto_desde_catalogo)
+
+        dashboard = DashboardPage(
+        self.contenedor_paginas,
+        self.registro,
+        self._abrir_proyecto_desde_catalogo
+    )
+
         dashboard.pack(fill="both", expand=True)
 
     def _mostrar_procesos(self):
@@ -142,16 +157,14 @@ class VentanaPrincipal(ctk.CTk):
         pagina.pack(fill="both", expand=True)
 
     def _mostrar_monitoreo(self):
-        for widget in self.contenedor_paginas.winfo_children():
-            widget.pack_forget()
+        self._limpiar_panel()
 
-        pagina = self.pagina_monitoreo_cache
-        if pagina is None or not pagina.winfo_exists():
-            pagina = PaginaMonitoreo(self.contenedor_paginas, self.historial)
-            self.pagina_monitoreo_cache = pagina
+        pagina = PaginaMonitoreo(
+          self.contenedor_paginas,
+          self.historial
+    )
 
         pagina.pack(fill="both", expand=True)
-        self.after_idle(pagina.actualizar)
 
     def _mostrar_configuracion(self):
         self._limpiar_panel()
@@ -193,9 +206,20 @@ class VentanaPrincipal(ctk.CTk):
             self._mostrar_inicio()
 
     def _abrir_proyecto_desde_catalogo(self, identificador):
-        self.pagina_actual = "procesos"
-        self.sidebar.seleccionar("procesos", notificar=False)
         self._seleccionar_proyecto(identificador)
+
+
+    def _construir_pie(self):
+        pie = ctk.CTkFrame(self, fg_color="transparent")
+        pie.pack(fill="x", padx=20, pady=(0, 12))
+        self.estado_global = ctk.CTkLabel(pie, text="Listo", text_color=COLORES["texto_secundario"], font=(FUENTE, 12))
+        self.estado_global.pack(side="left")
+        ctk.CTkLabel(pie, text="No se publican resultados corporativos desde esta fase.", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(side="right")
+
+    def _limpiar_panel(self):
+         for elemento in self.contenedor_paginas.winfo_children():
+             elemento.destroy()
+         self.campos = {}
 
     def _seleccionar_proyecto(self, identificador):
         if self.en_ejecucion:
@@ -355,7 +379,7 @@ class VentanaPrincipal(ctk.CTk):
 
         cabecera = ctk.CTkFrame(contenedor, fg_color="transparent")
         cabecera.pack(fill="x", padx=30, pady=(26, 12))
-        ctk.CTkLabel(cabecera, text=metadatos["nombre"], text_color=COLORES["texto"], font=(FUENTE, 24, "bold")).pack(anchor="w")
+        ctk.CTkLabel(cabecera, text=metadatos["nombre"], text_color=COLORES["texto"], font=(FUENTE, 30, "bold")).pack(anchor="w")
         ctk.CTkLabel(cabecera, text=metadatos["descripcion"], text_color=COLORES["texto_secundario"], font=(FUENTE, 14)).pack(anchor="w", pady=(4, 0))
 
         color_disp = COLORES["verde"] if disponibilidad["disponible"] else COLORES["rojo"]
@@ -364,7 +388,10 @@ class VentanaPrincipal(ctk.CTk):
         formulario = ctk.CTkFrame(contenedor, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])
         formulario.pack(fill="x", padx=30, pady=10)
 
-        for fila, campo in enumerate(self.proyecto_actual.obtener_campos_configuracion()):
+        formulario.pack(fill="x", padx=30, pady=10)
+        ctk.CTkLabel(formulario, text="Configuración del proceso", text_color=COLORES["texto"], font=(FUENTE, 16, "bold")).grid(row=0, column=0, columnspan=3, sticky="w", padx=16, pady=(14, 1))
+        ctk.CTkLabel(formulario, text="Define los parámetros necesarios antes de ejecutar.", text_color=COLORES["texto_secundario"], font=(FUENTE, 11)).grid(row=1, column=0, columnspan=3, sticky="w", padx=16, pady=(0, 7))
+        for fila, campo in enumerate(self.proyecto_actual.obtener_campos_configuracion(), start=2):
             self._crear_campo(formulario, fila, campo)
 
         acciones = ctk.CTkFrame(contenedor, fg_color="transparent")
@@ -396,6 +423,10 @@ class VentanaPrincipal(ctk.CTk):
 
         tipo = campo["tipo"]
         variable = ctk.StringVar()
+        
+                # ----------------------------------
+        # NUEVO: LISTAS DESPLEGABLES
+        # ----------------------------------
 
         if tipo == "opcion":
             opciones = campo.get("opciones", [])
@@ -460,7 +491,7 @@ class VentanaPrincipal(ctk.CTk):
         control = ctk.CTkEntry(padre, textvariable=variable, fg_color=COLORES["panel"], text_color=COLORES["texto"])
         control.grid(row=fila, column=1, sticky="ew", padx=(0, 16), pady=10)
         self.campos[campo["id"]] = {"variable": variable, "tipo": tipo}
-
+        
     def _seleccionar_carpeta(self, variable):
         ruta = filedialog.askdirectory(title="Seleccione una carpeta local")
         if ruta:

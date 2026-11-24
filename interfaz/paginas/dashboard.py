@@ -1,12 +1,12 @@
 import customtkinter as ctk
-from interfaz.estilos import COLORES, FUENTE
-
+from interfaz.estilos import FUENTE, COLORES
 
 class DashboardPage(ctk.CTkScrollableFrame):
     def __init__(self, parent, registro, on_abrir_proceso=None):
         super().__init__(parent, fg_color="transparent")
         self.registro = registro
         self.on_abrir_proceso = on_abrir_proceso
+        
         procesos = registro.listar()
         disponibles = 0
         for meta in procesos:
@@ -35,14 +35,16 @@ class DashboardPage(ctk.CTkScrollableFrame):
 
         # Métricas
         metricas = ctk.CTkFrame(self, fg_color="transparent")
-        metricas.pack(fill="x", padx=16, pady=5)
+        metricas.pack(fill="x", padx=15)
+        
         datos = [
             ("▦", "Procesos", str(len(procesos)), "Total registrados"),
             ("✓", "Disponibles", str(disponibles), "Listos para ejecutar"),
             ("−", "No disponibles", str(max(0, len(procesos)-disponibles)), "En mantenimiento"),
             ("⏱", "Última ejecución", "Hoy, 11:51", "Comisiones 250115"),
         ]
-        for i, d in enumerate(datos):
+        
+        for i, (titulo, valor, color) in enumerate(datos):
             metricas.grid_columnconfigure(i, weight=1)
             self._tarjeta_metrica(metricas, *d).grid(row=0, column=i, sticky="nsew", padx=4)
 
@@ -59,14 +61,22 @@ class DashboardPage(ctk.CTkScrollableFrame):
         for i, meta in enumerate(procesos):
             self._tarjeta_proceso(grid_proc, meta).grid(row=i // 2, column=i % 2, sticky="nsew", padx=4, pady=4)
 
-        # Inferior: Actividad y Accesos
-        inferior = ctk.CTkFrame(self, fg_color="transparent")
-        inferior.pack(fill="x", padx=16, pady=(15, 20))
-        inferior.grid_columnconfigure(0, weight=1)
-        inferior.grid_columnconfigure(1, weight=1)
+    def _metrica(self, parent, titulo, valor, color):
+        card = ctk.CTkFrame(parent, fg_color=COLORES["panel"], corner_radius=8, 
+                            border_width=1, border_color=COLORES["borde"])
+        
+        barra = ctk.CTkFrame(card, fg_color=color, height=4, corner_radius=4)
+        barra.pack(fill="x", padx=2, pady=(2, 0))
+        
+        ctk.CTkLabel(card, text=titulo, text_color=COLORES["texto_secundario"],
+                     font=(FUENTE, 13)).pack(anchor="w", padx=20, pady=(15, 0))
+        ctk.CTkLabel(card, text=str(valor), text_color=COLORES["texto"],
+                     font=(FUENTE, 32, "bold")).pack(anchor="w", padx=20, pady=(0, 15))
+        return card
 
-        actividad = ctk.CTkFrame(inferior, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])
-        actividad.grid(row=0, column=0, sticky="nsew", padx=4)
+    def _proceso(self, parent, meta):
+        card = ctk.CTkFrame(parent, fg_color=COLORES["panel"], corner_radius=8,
+                            border_width=1, border_color=COLORES["borde"])
         
         cabecera_act = ctk.CTkFrame(actividad, fg_color="transparent")
         cabecera_act.pack(fill="x", padx=20, pady=(20, 10))

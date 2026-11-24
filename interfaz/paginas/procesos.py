@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from interfaz.estilos import FUENTE, COLORES
+from interfaz.estilos import COLORES, FUENTE
 
 
 class PaginaProcesos(ctk.CTkScrollableFrame):
@@ -9,38 +9,88 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
         self.on_abrir_proceso = on_abrir_proceso
 
         cabecera = ctk.CTkFrame(self, fg_color="transparent")
-        cabecera.pack(fill="x", padx=25, pady=(26, 14))
-
+        cabecera.pack(fill="x", padx=28, pady=(24, 14))
         ctk.CTkLabel(
             cabecera,
             text="Procesos",
             text_color=COLORES["texto"],
-            font=(FUENTE, 28, "bold"),
+            font=(FUENTE, 30, "bold"),
         ).pack(anchor="w")
-
         ctk.CTkLabel(
             cabecera,
             text="Selecciona un módulo corporativo para configurar y ejecutar.",
             text_color=COLORES["texto_secundario"],
             font=(FUENTE, 14),
         ).pack(anchor="w", pady=(3, 0))
+        
+        procesos = self.registro.listar()
+
+        disponibles = 0
+
+        estados = {}
+
+        if not hasattr(self.registro, "_cache_disponibilidad"):
+         self.registro._cache_disponibilidad = {}
+
+        for meta in procesos:
+
+         identificador = meta["id"]
+
+        if identificador not in self.registro._cache_disponibilidad:
+
+         try:
+            self.registro._cache_disponibilidad[
+                identificador
+            ] = self.registro.obtener(
+                identificador
+            ).validar_disponibilidad()
+
+         except Exception as error:
+
+            self.registro._cache_disponibilidad[
+                identificador
+            ] = {
+                "disponible": False,
+                "mensaje": str(error)
+            }
+
+        estado = self.registro._cache_disponibilidad[
+         identificador
+    ]
+
+        estados[identificador] = estado
+
+        disponibles += int(
+        bool(
+            estado.get("disponible")
+        )
+    )
+        resumen = ctk.CTkFrame(self, fg_color="transparent")
+        resumen.pack(fill="x", padx=22, pady=(0, 10))
+        for col in range(3):
+          resumen.grid_columnconfigure(col, weight=1, uniform="resumen")
+        datos = [
+            ("▦", "Registrados", len(procesos), "Módulos en AP", COLORES["azul_suave"], COLORES["azul"]),
+            ("✓", "Disponibles", disponibles, "Listos para ejecutar", COLORES["verde_suave"], COLORES["verde"]),
+            ("−", "No disponibles", len(procesos) - disponibles, "Requieren revisión", COLORES["panel_suave"], COLORES["texto_secundario"]),
+        ]
+        for i, dato in enumerate(datos):
+            self._resumen(resumen, *dato).grid(row=0, column=i, sticky="nsew", padx=6, pady=4)
 
         panel = ctk.CTkFrame(
             self,
             fg_color=COLORES["panel"],
-            corner_radius=12,
+            corner_radius=14,
             border_width=1,
             border_color=COLORES["borde"],
         )
-        panel.pack(fill="both", expand=True, padx=20, pady=(0, 22))
-
+        panel.pack(fill="both", expand=True, padx=20, pady=(2, 22))
         ctk.CTkLabel(
             panel,
             text="Catálogo de procesos disponibles",
             text_color=COLORES["texto"],
             font=(FUENTE, 18, "bold"),
-        ).pack(anchor="w", padx=18, pady=(16, 2))
-
+        ).pack(anchor="w", padx=18, pady=(16, 1))
         ctk.CTkLabel(
             panel,
             text="Módulos registrados actualmente en el Aplicativo de Procesos.",
@@ -50,34 +100,22 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
 
         rejilla = ctk.CTkFrame(panel, fg_color="transparent")
         rejilla.pack(fill="both", expand=True, padx=10, pady=(0, 12))
-
         for columna in range(2):
             rejilla.grid_columnconfigure(columna, weight=1, uniform="procesos")
 
-        for indice, meta in enumerate(registro.listar()):
-            proyecto = registro.obtener(meta["id"])
+        for indice, meta in enumerate(procesos):
+            card = self._crear_tarjeta(rejilla, meta, estados.get(meta["id"], {}))
+            card.grid(row=indice // 2, column=indice % 2, sticky="nsew", padx=7, pady=7)
 
-            try:
-                disponibilidad = proyecto.validar_disponibilidad()
-            except Exception as error:
-                disponibilidad = {
-                    "disponible": False,
-                    "mensaje": str(error),
-                }
-
-            card = self._crear_tarjeta(
-                rejilla,
-                meta,
-                disponibilidad,
-            )
-
-            card.grid(
-                row=indice // 2,
-                column=indice % 2,
-                sticky="nsew",
-                padx=7,
-                pady=7,
-            )
+    def _resumen(self, parent, icono, titulo, valor, detalle, fondo, color):
+        card = ctk.CTkFrame(parent, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])
+        ctk.CTkLabel(card, text=icono, width=44, height=44, corner_radius=9, fg_color=fondo, text_color=color, font=(FUENTE, 18, "bold")).pack(side="left", padx=(13, 9), pady=12)
+        texto = ctk.CTkFrame(card, fg_color="transparent")
+        texto.pack(side="left", fill="both", expand=True, pady=9)
+        ctk.CTkLabel(texto, text=titulo, text_color=COLORES["texto_secundario"], font=(FUENTE, 10)).pack(anchor="w")
+        ctk.CTkLabel(texto, text=str(valor), text_color=COLORES["texto"], font=(FUENTE, 20, "bold")).pack(anchor="w")
+        ctk.CTkLabel(texto, text=detalle, text_color=COLORES["texto_secundario"], font=(FUENTE, 9)).pack(anchor="w")
+        return card
 
     def _crear_tarjeta(self, parent, meta, disponibilidad):
         card = ctk.CTkFrame(
@@ -87,6 +125,9 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
             border_width=1,
             border_color=COLORES["borde"],
         )
+        disponible = bool(disponibilidad.get("disponible"))
+        color_estado = COLORES["verde"] if disponible else COLORES["rojo"]
+        fondo_estado = COLORES["verde_suave"] if disponible else COLORES["rojo_suave"]
 
         disponible = bool(disponibilidad.get("disponible"))
 
@@ -104,8 +145,9 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
         else:
             icono = "📊"
 
+        icono = "▤" if meta.get("id") != "inversiones" else "▥"
         ctk.CTkLabel(
-            encabezado,
+            superior,
             text=icono,
             width=58,
             height=58,
@@ -118,11 +160,13 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
         titulo_estado = ctk.CTkFrame(encabezado, fg_color="transparent")
         titulo_estado.pack(side="left", fill="x", expand=True)
 
+        info = ctk.CTkFrame(superior, fg_color="transparent")
+        info.pack(side="left", fill="x", expand=True)
         ctk.CTkLabel(
-            titulo_estado,
-            text=meta.get("nombre", meta["id"]),
+            info,
+            text=meta.get("nombre", meta.get("id", "Proceso")),
             text_color=COLORES["texto"],
-            font=(FUENTE, 17, "bold"),
+            font=(FUENTE, 18, "bold"),
         ).pack(anchor="w")
 
         badge = ctk.CTkLabel(

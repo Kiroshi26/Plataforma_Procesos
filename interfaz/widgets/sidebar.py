@@ -75,6 +75,9 @@ class Sidebar(ctk.CTkFrame):
             else:
                 boton.configure(fg_color="transparent", text_color=COLORES["sidebar_texto"], hover_color="#333333", font=(FUENTE, 13, "normal"))
         if notificar and self.on_navegar:
+
+            self.on_navegar(clave)
+
             self.on_navegar(id_opcion)
 
     def alternar(self):

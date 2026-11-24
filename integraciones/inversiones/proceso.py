@@ -1,5 +1,5 @@
+# -*- coding: utf-8 -*-
 import sys
-from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -14,8 +14,12 @@ class ResultadoModuloInversiones:
     periodo: str
     archivo_saldos: Path
     cantidad_saldos: int
+    cantidad_subcuentas: int
     cantidad_baseneg: int
-    total_mes: float
+    total_saldo_contable: float
+    total_saldo_f351: float
+    total_diferencias: float
+    registros_con_diferencia: int
 
 
 def ejecutar(
@@ -25,6 +29,7 @@ def ejecutar(
     clave,
     ruta_proyecto,
     reportar_evento=None,
+    saldos_override=None,
 ):
     raiz = Path(ruta_proyecto).resolve()
     carpeta_src = raiz / "src"
@@ -42,73 +47,48 @@ def ejecutar(
         sys.path.insert(0, ruta_raiz)
 
     try:
-        from src.configuracion import (
-            cargar_configuracion,
-            validar_carpetas,
-            validar_configuracion_red,
-            validar_modo_seguro,
-        )
+        from src.configuracion import cargar_configuracion, validar_carpetas
         from src.insumos import cargar_insumos
-        from src.insumos_red import preparar_insumos_desde_red
         from src.parametros import crear_parametros
-        from src.procesamiento import preparar_insumos
         from src.proceso_inversiones import ejecutar_proceso_inversiones
     except ImportError as error:
         raise ErrorModuloInversiones(
-            f"No fue posible importar el motor original desde {raiz}. Detalle: {error}"
+            f"No fue posible importar el motor de Inversiones desde {raiz}. Detalle: {error}"
         ) from error
 
     def evento(estado, mensaje, porcentaje):
         if reportar_evento:
             reportar_evento(estado, mensaje, porcentaje)
 
-    evento("CONFIGURACION", "Cargando configuración original de Inversiones.", 10)
+    evento("CONFIGURACION", "Cargando configuración de Inversiones.", 10)
     configuracion = cargar_configuracion(str(ruta_config))
-    validar_modo_seguro(configuracion)
-    rutas_locales = validar_carpetas(configuracion)
-    rutas_red = validar_configuracion_red(configuracion)
+    validar_carpetas(configuracion)
 
     parametros = crear_parametros(anio=anio, mes=mes)
 
-    evento("INSUMOS", "Copiando insumos corporativos a una ejecución local.", 20)
-    ejecucion = preparar_insumos_desde_red(
-        configuracion=configuracion,
-        rutas_red=rutas_red,
-        carpeta_ejecuciones=rutas_locales["ejecuciones"],
-        fecha_corte=parametros.fecha_corte,
-    )
+    evento("INSUMOS", "Leyendo insumos locales (BASE_NEGOCIOS y Formato 351).", 25)
+    insumos = cargar_insumos(configuracion)
 
-    # La configuración original no se modifica. Esta copia solo vive en memoria
-    # durante la ejecución y hace que cargar_insumos lea los archivos congelados.
-    configuracion_ejecucion = deepcopy(configuracion)
-    configuracion_ejecucion["rutas"]["insumos_prueba"] = str(
-        ejecucion.carpeta_ejecucion
-    )
-    configuracion_ejecucion["archivos"]["formato_351"] = ejecucion.formato_351.nombre
-    configuracion_ejecucion["archivos"]["mapas_contables"] = ejecucion.mapas_contables.nombre
-    configuracion_ejecucion["archivos"]["mapas_centros_costos"] = (
-        ejecucion.mapas_centros_costos.nombre
-    )
-
-    evento("LECTURA", "Leyendo las copias locales de los insumos.", 40)
-    insumos = cargar_insumos(configuracion_ejecucion)
-    resultado_preparacion = preparar_insumos(insumos)
-
-    evento("PROCESO", "Ejecutando consulta y conciliación de Inversiones.", 60)
+    evento("PROCESO", "Consultando base de datos Óptima y ejecutando conciliación.", 55)
     resultado = ejecutar_proceso_inversiones(
-        configuracion=configuracion_ejecucion,
+        configuracion=configuracion,
         parametros=parametros,
-        resultado_preparacion=resultado_preparacion,
+        insumos=insumos,
         usuario=usuario,
         clave=clave,
+        saldos_nacional_override=saldos_override,
     )
 
-    evento("FINALIZADO", "Proceso de Inversiones finalizado.", 100)
+    evento("FINALIZADO", "Conciliación de Inversiones completada exitosamente.", 100)
     return ResultadoModuloInversiones(
         exitoso=True,
         periodo=parametros.periodo,
         archivo_saldos=Path(resultado.ruta_archivo),
         cantidad_saldos=resultado.cantidad_saldos,
+        cantidad_subcuentas=resultado.cantidad_subcuentas,
         cantidad_baseneg=resultado.cantidad_baseneg,
-        total_mes=resultado.total_mes,
+        total_saldo_contable=resultado.total_saldo_contable,
+        total_saldo_f351=resultado.total_saldo_f351,
+        total_diferencias=resultado.total_diferencias,
+        registros_con_diferencia=resultado.registros_con_diferencia,
     )

@@ -1,9 +1,10 @@
 {
   "nombre": "Plataforma de Procesos",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "rutas_proyectos": {
     "comisiones": "C:\\Proyectos\\Proyecto_Comisiones",
-    "inversiones": "C:\\Proyectos\\Proyecto_Inversiones"
+    "inversiones": "C:\\Proyectos\\Proyecto_Inversiones",
+    "cruce_efectivo": "C:\\Proyectos\\Cruce_Efectivo-main\\Cruce_Efectivo-main"
   },
   "seguridad": {
     "inversiones_publicacion_corporativa_autorizada": false,

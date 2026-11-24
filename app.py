@@ -4,13 +4,17 @@ from pathlib import Path
 
 from integraciones.comisiones.adaptador import AdaptadorComisiones
 from integraciones.inversiones.adaptador import AdaptadorInversiones
+from integraciones.cruce_efectivo.adaptador import AdaptadorCruceEfectivo
 from nucleo.registro_proyectos import RegistroProyectos
-
-RUTA_BASE = Path(__file__).resolve().parent
+from nucleo.recursos import obtener_directorio_aplicacion, obtener_ruta_recurso
 
 
 def cargar_configuracion():
-    ruta = RUTA_BASE / "configuracion" / "plataforma.json"
+    # Intenta leer desde el directorio editable de la app
+    ruta = obtener_directorio_aplicacion() / "configuracion" / "plataforma.json"
+    if not ruta.exists():
+        # Fallback al recurso interno congelado
+        ruta = obtener_ruta_recurso("configuracion/plataforma.json")
     return json.loads(ruta.read_text(encoding="utf-8"))
 
 
@@ -20,6 +24,8 @@ def crear_registro(configuracion=None):
     registro = RegistroProyectos()
     registro.registrar(AdaptadorComisiones(rutas["comisiones"]))
     registro.registrar(AdaptadorInversiones(rutas["inversiones"]))
+    if "cruce_efectivo" in rutas:
+        registro.registrar(AdaptadorCruceEfectivo(rutas["cruce_efectivo"]))
     return registro
 
 
@@ -41,7 +47,7 @@ def ejecutar_consola(configuracion, registro):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Plataforma modular de procesos")
+    parser = argparse.ArgumentParser(description="Plataforma modular de procesos Bancolombia")
     parser.add_argument(
         "--consola",
         action="store_true",

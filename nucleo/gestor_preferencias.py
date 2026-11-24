@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from nucleo.recursos import asegurar_directorio_datos, obtener_directorio_aplicacion
 
 
 class GestorPreferencias:
@@ -18,8 +19,8 @@ class GestorPreferencias:
 
     def __init__(self, ruta=None):
         if ruta is None:
-            raiz = Path(__file__).resolve().parents[1]
-            ruta = raiz / "configuracion" / "preferencias_usuario.json"
+            dir_base = asegurar_directorio_datos()
+            ruta = dir_base / "configuracion" / "preferencias_usuario.json"
         self.ruta = Path(ruta)
         self.datos = dict(self.PREDETERMINADAS)
         self.cargar()
@@ -44,13 +45,11 @@ class GestorPreferencias:
         self.guardar()
 
     def guardar(self):
-        self.ruta.parent.mkdir(parents=True, exist_ok=True)
-        temporal = self.ruta.with_suffix(".tmp")
-        with temporal.open("w", encoding="utf-8") as archivo:
-            json.dump(self.datos, archivo, ensure_ascii=False, indent=2)
-        temporal.replace(self.ruta)
-
-    def restablecer(self):
-        self.datos = dict(self.PREDETERMINADAS)
-        self.guardar()
-        return dict(self.datos)
+        try:
+            self.ruta.parent.mkdir(parents=True, exist_ok=True)
+            temporal = self.ruta.with_suffix(".tmp")
+            with temporal.open("w", encoding="utf-8") as archivo:
+                json.dump(self.datos, archivo, ensure_ascii=False, indent=2)
+            temporal.replace(self.ruta)
+        except OSError:
+            pass

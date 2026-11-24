@@ -26,8 +26,12 @@ COLORES = {
     # Estados y Alertas
     "verde": ("#008A4D", "#008A4D"), # Darker green for text on pills
     "fondo_pill_verde": ("#E0F2E9", "#1C3326"), # Light green pill bg
-    "amarillo_estado": ("#FDDA24", "#FDDA24"),
+    "amarillo_estado": ("#D97706", "#FDDA24"),
+    "fondo_pill_amarillo": ("#FFF8D6", "#3E3610"),
+    "azul_estado": ("#09738A", "#59CBE8"),
+    "fondo_pill_azul": ("#E6F7FA", "#123040"),
     "rojo": ("#D32F2F", "#EF5350"),
+    "fondo_pill_rojo": ("#FDE8E8", "#3B1818"),
     "consola": ("#2C2A29", "#121212"),
     "consola_texto": ("#FFFFFF", "#E0E0E0"),
     

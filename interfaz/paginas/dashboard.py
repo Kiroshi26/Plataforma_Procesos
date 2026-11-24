@@ -22,7 +22,6 @@ class DashboardPage(ctk.CTkScrollableFrame):
         hero.grid_columnconfigure(0, weight=1)
         hero.grid_columnconfigure(1, weight=0)
 
-        # Usar colores grises corporativos para simular la imagen de fondo del banner
         texto = ctk.CTkFrame(hero, fg_color="transparent")
         texto.grid(row=0, column=0, sticky="nsew", padx=26, pady=26)
         ctk.CTkLabel(texto, text="Inicio", text_color=COLORES["texto"], font=(FUENTE, 32, "bold")).pack(anchor="w")
@@ -32,7 +31,7 @@ class DashboardPage(ctk.CTkScrollableFrame):
         # Version top right
         version_frame = ctk.CTkFrame(hero, fg_color="transparent")
         version_frame.grid(row=0, column=1, sticky="ne", padx=20, pady=20)
-        ctk.CTkLabel(version_frame, text="Versión 0.4.0", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack()
+        ctk.CTkLabel(version_frame, text="Versión 0.5.0", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack()
 
         # Métricas
         metricas = ctk.CTkFrame(self, fg_color="transparent")
@@ -40,7 +39,7 @@ class DashboardPage(ctk.CTkScrollableFrame):
         datos = [
             ("▦", "Procesos", str(len(procesos)), "Total registrados"),
             ("✓", "Disponibles", str(disponibles), "Listos para ejecutar"),
-            ("−", "No disponibles", str(len(procesos)-disponibles), "En mantenimiento"),
+            ("−", "No disponibles", str(max(0, len(procesos)-disponibles)), "En mantenimiento"),
             ("⏱", "Última ejecución", "Hoy, 11:51", "Comisiones 250115"),
         ]
         for i, d in enumerate(datos):
@@ -51,13 +50,13 @@ class DashboardPage(ctk.CTkScrollableFrame):
         seccion_proc = ctk.CTkFrame(self, fg_color="transparent")
         seccion_proc.pack(fill="x", padx=20, pady=(25, 10))
         ctk.CTkLabel(seccion_proc, text="Procesos disponibles", text_color=COLORES["texto"], font=(FUENTE, 18, "bold")).pack(anchor="w")
-        ctk.CTkLabel(seccion_proc, text="Selecciona un proceso para comenzar", text_color=COLORES["texto_secundario"], font=(FUENTE, 13)).pack(anchor="w")
+        ctk.CTkLabel(seccion_proc, text="Selecciona un proceso corporativo para comenzar", text_color=COLORES["texto_secundario"], font=(FUENTE, 13)).pack(anchor="w")
 
         grid_proc = ctk.CTkFrame(self, fg_color="transparent")
         grid_proc.pack(fill="x", padx=16)
+        grid_proc.grid_columnconfigure((0, 1), weight=1)
         
         for i, meta in enumerate(procesos):
-            grid_proc.grid_columnconfigure(i % 2, weight=1)
             self._tarjeta_proceso(grid_proc, meta).grid(row=i // 2, column=i % 2, sticky="nsew", padx=4, pady=4)
 
         # Inferior: Actividad y Accesos
@@ -72,10 +71,11 @@ class DashboardPage(ctk.CTkScrollableFrame):
         cabecera_act = ctk.CTkFrame(actividad, fg_color="transparent")
         cabecera_act.pack(fill="x", padx=20, pady=(20, 10))
         ctk.CTkLabel(cabecera_act, text="Actividad reciente", text_color=COLORES["texto"], font=(FUENTE, 16, "bold")).pack(side="left")
-        ctk.CTkLabel(cabecera_act, text="Ver todo →", text_color=COLORES["azul"], font=(FUENTE, 12)).pack(side="right")
+        ctk.CTkLabel(cabecera_act, text="Trazabilidad activa", text_color=COLORES["verde"], font=(FUENTE, 11, "bold")).pack(side="right")
         
-        self._item_actividad(actividad, "Comisiones 250115", "Finalizado con advertencias", "Hoy, 11:51", "Duración: 00:02:05")
-        self._item_actividad(actividad, "Inversiones", "Finalizado correctamente", "Ayer, 16:23", "Duración: 00:04:12")
+        self._item_actividad(actividad, "Comisiones 250115", "Informe mensual generado", "Hoy, 11:51", "Duración: 00:02:05")
+        self._item_actividad(actividad, "Inversiones", "Conciliación fiduciaria OK", "Ayer, 16:23", "Duración: 00:04:12")
+        self._item_actividad(actividad, "Cruce de Efectivo", "Extracción masiva de PDFs", "24/11, 09:15", "Duración: 00:01:30")
 
         accesos = ctk.CTkFrame(inferior, fg_color="transparent")
         accesos.grid(row=0, column=1, sticky="nsew", padx=4)
@@ -87,7 +87,7 @@ class DashboardPage(ctk.CTkScrollableFrame):
         
         self._tarjeta_acceso(grid_acc, "📊", "Monitoreo", "Historial y resultados").grid(row=0, column=0, sticky="nsew", padx=4)
         self._tarjeta_acceso(grid_acc, "⚙", "Configuración", "Personaliza tu experiencia").grid(row=0, column=1, sticky="nsew", padx=4)
-        self._tarjeta_acceso(grid_acc, "❓", "Ayuda", "Documentación y soporte").grid(row=0, column=2, sticky="nsew", padx=4)
+        self._tarjeta_acceso(grid_acc, "📁", "Salidas", "Ver archivos generados").grid(row=0, column=2, sticky="nsew", padx=4)
 
     def _tarjeta_metrica(self, parent, icono, titulo, valor, detalle):
         c = ctk.CTkFrame(parent, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])
@@ -97,7 +97,7 @@ class DashboardPage(ctk.CTkScrollableFrame):
         if "✓" in icono:
             icon_bg = COLORES["fondo_pill_verde"]
             icon_fg = COLORES["verde"]
-        
+            
         icon = ctk.CTkLabel(c, text=icono, width=42, height=42, corner_radius=10, fg_color=icon_bg, text_color=icon_fg, font=(FUENTE, 20, "bold"))
         icon.pack(side="left", padx=(16, 14), pady=16)
         
@@ -117,29 +117,33 @@ class DashboardPage(ctk.CTkScrollableFrame):
     def _tarjeta_proceso(self, parent, meta):
         c = ctk.CTkFrame(parent, fg_color=COLORES["panel"], corner_radius=12, border_width=1, border_color=COLORES["borde"])
         
-        # Icon section
         icon_frame = ctk.CTkFrame(c, fg_color="transparent")
         icon_frame.pack(side="left", fill="y", padx=(20, 10), pady=20)
         
-        icono_txt = "🪙" if "comision" in meta["id"].lower() else "📊"
-        ctk.CTkLabel(icon_frame, text=icono_txt, width=70, height=70, corner_radius=12, fg_color=COLORES["fondo_modulo"], text_color=COLORES["texto"], font=(FUENTE, 32)).pack()
+        id_proc = meta.get("id", "").lower()
+        if "comision" in id_proc:
+            icono_txt = "🪙"
+        elif "cruce" in id_proc:
+            icono_txt = "📑"
+        else:
+            icono_txt = "📊"
+
+        ctk.CTkLabel(icon_frame, text=icono_txt, width=70, height=70, corner_radius=12, fg_color=COLORES["fondo_modulo"], text_color=COLORES["texto"], font=(FUENTE, 30)).pack()
         
-        # Text section
         txt = ctk.CTkFrame(c, fg_color="transparent")
         txt.pack(side="left", fill="both", expand=True, pady=20, padx=10)
         
         ctk.CTkLabel(txt, text=meta.get("nombre", meta.get("id", "Proceso")), text_color=COLORES["texto"], font=(FUENTE, 16, "bold")).pack(anchor="w")
         
-        pill = ctk.CTkLabel(txt, text="INTEGRADO" if "comision" in meta["id"].lower() else "DISPONIBLE", 
+        pill = ctk.CTkLabel(txt, text=meta.get("estado", "INTEGRADO"), 
                             fg_color=COLORES["fondo_pill_verde"], text_color=COLORES["verde"], 
-                            font=(FUENTE, 10, "bold"), corner_radius=4, height=20, width=70)
+                            font=(FUENTE, 10, "bold"), corner_radius=4, height=20, width=75)
         pill.pack(anchor="w", pady=(4, 6))
         
-        ctk.CTkLabel(txt, text=meta.get("descripcion", ""), wraplength=300, justify="left", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(anchor="w", pady=(0, 10))
+        ctk.CTkLabel(txt, text=meta.get("descripcion", ""), wraplength=320, justify="left", text_color=COLORES["texto_secundario"], font=(FUENTE, 12)).pack(anchor="w", pady=(0, 10))
         
         ctk.CTkButton(txt, text="Abrir módulo →", fg_color=COLORES["primario"], hover_color=COLORES["primario_hover"], text_color=COLORES["texto_boton"], font=(FUENTE, 12, "bold"), width=120, height=32, corner_radius=6, command=lambda: self.on_abrir_proceso and self.on_abrir_proceso(meta["id"])).pack(anchor="w")
         
-        # Arrow right
         arr = ctk.CTkFrame(c, fg_color="transparent")
         arr.pack(side="right", fill="y", padx=20)
         ctk.CTkLabel(arr, text=">", text_color=COLORES["texto_secundario"], font=(FUENTE, 18)).pack(expand=True)

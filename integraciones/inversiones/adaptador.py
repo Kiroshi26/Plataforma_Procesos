@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from pathlib import Path
 
 from nucleo.contrato_proyecto import ContratoProyecto
@@ -13,8 +14,8 @@ class AdaptadorInversiones(ContratoProyecto):
         return {
             "id": "inversiones",
             "nombre": "Inversiones",
-            "descripcion": "Procesamiento y conciliación de inversiones usando el motor original.",
-            "estado": "DISPONIBLE",
+            "descripcion": "Procesamiento y conciliación de inversiones fiduciarias usando el motor original.",
+            "estado": "INTEGRADO",
         }
 
     def obtener_campos_configuracion(self):
@@ -27,7 +28,7 @@ class AdaptadorInversiones(ContratoProyecto):
             },
             {
                 "id": "usuario_nacional",
-                "etiqueta": "Usuario Nacional",
+                "etiqueta": "Usuario Nacional (Óptima)",
                 "tipo": "texto",
                 "requerido": True,
                 "sensible": True,
@@ -59,8 +60,8 @@ class AdaptadorInversiones(ContratoProyecto):
             self.ruta_proyecto / "config.yaml",
             self.ruta_proyecto / "src" / "configuracion.py",
             self.ruta_proyecto / "src" / "insumos.py",
-            self.ruta_proyecto / "src" / "insumos_red.py",
             self.ruta_proyecto / "src" / "proceso_inversiones.py",
+            self.ruta_proyecto / "src" / "parametros.py",
         ]
         faltantes = [str(ruta) for ruta in requeridos if not ruta.exists()]
         if faltantes:
@@ -128,8 +129,12 @@ class AdaptadorInversiones(ContratoProyecto):
                 metricas={
                     "periodo": resultado.periodo,
                     "cantidad_saldos": resultado.cantidad_saldos,
+                    "cantidad_subcuentas": resultado.cantidad_subcuentas,
                     "cantidad_baseneg": resultado.cantidad_baseneg,
-                    "total_mes": resultado.total_mes,
+                    "total_saldo_contable": resultado.total_saldo_contable,
+                    "total_saldo_f351": resultado.total_saldo_f351,
+                    "total_diferencias": resultado.total_diferencias,
+                    "registros_con_diferencia": resultado.registros_con_diferencia,
                 },
             ).como_diccionario()
 

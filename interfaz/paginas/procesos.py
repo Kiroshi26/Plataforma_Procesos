@@ -20,7 +20,7 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
 
         ctk.CTkLabel(
             cabecera,
-            text="Selecciona un módulo para configurar y ejecutar.",
+            text="Selecciona un módulo corporativo para configurar y ejecutar.",
             text_color=COLORES["texto_secundario"],
             font=(FUENTE, 14),
         ).pack(anchor="w", pady=(3, 0))
@@ -36,7 +36,7 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
 
         ctk.CTkLabel(
             panel,
-            text="Procesos disponibles",
+            text="Catálogo de procesos disponibles",
             text_color=COLORES["texto"],
             font=(FUENTE, 18, "bold"),
         ).pack(anchor="w", padx=18, pady=(16, 2))
@@ -88,36 +88,21 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
             border_color=COLORES["borde"],
         )
 
-        disponible = bool(
-            disponibilidad.get("disponible")
-        )
+        disponible = bool(disponibilidad.get("disponible"))
 
-        color_estado = (
-            COLORES["verde"]
-            if disponible
-            else COLORES["rojo"]
-        )
+        contenido = ctk.CTkFrame(card, fg_color="transparent")
+        contenido.pack(fill="both", expand=True, padx=16, pady=16)
 
-        contenido = ctk.CTkFrame(
-            card,
-            fg_color="transparent",
-        )
-        contenido.pack(
-            fill="both",
-            expand=True,
-            padx=16,
-            pady=16,
-        )
-
-        encabezado = ctk.CTkFrame(
-            contenido,
-            fg_color="transparent",
-        )
+        encabezado = ctk.CTkFrame(contenido, fg_color="transparent")
         encabezado.pack(fill="x")
 
-        icono = "▤"
-        if meta.get("id") == "inversiones":
-            icono = "▥"
+        id_proc = meta.get("id", "").lower()
+        if "comision" in id_proc:
+            icono = "🪙"
+        elif "cruce" in id_proc:
+            icono = "📑"
+        else:
+            icono = "📊"
 
         ctk.CTkLabel(
             encabezado,
@@ -125,20 +110,13 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
             width=58,
             height=58,
             corner_radius=10,
-            fg_color=("#FFF2BC", "#423917"),
+            fg_color=COLORES["fondo_modulo"],
             text_color=COLORES["texto"],
-            font=(FUENTE, 26, "bold"),
+            font=(FUENTE, 26),
         ).pack(side="left", padx=(0, 14))
 
-        titulo_estado = ctk.CTkFrame(
-            encabezado,
-            fg_color="transparent",
-        )
-        titulo_estado.pack(
-            side="left",
-            fill="x",
-            expand=True,
-        )
+        titulo_estado = ctk.CTkFrame(encabezado, fg_color="transparent")
+        titulo_estado.pack(side="left", fill="x", expand=True)
 
         ctk.CTkLabel(
             titulo_estado,
@@ -147,65 +125,47 @@ class PaginaProcesos(ctk.CTkScrollableFrame):
             font=(FUENTE, 17, "bold"),
         ).pack(anchor="w")
 
-        estado_texto = str(
-            meta.get(
-                "estado",
-                "DISPONIBLE" if disponible else "NO DISPONIBLE",
-            )
-        ).upper()
-
         badge = ctk.CTkLabel(
             titulo_estado,
-            text=estado_texto,
-            height=26,
-            corner_radius=8,
-            fg_color=("#DDF5E7", "#153A29") if disponible else ("#FBE3E0", "#43211F"),
-            text_color=color_estado,
+            text="DISPONIBLE" if disponible else "NO DISPONIBLE",
+            height=22,
+            corner_radius=4,
+            fg_color=COLORES["fondo_pill_verde"] if disponible else COLORES["fondo_pill_rojo"],
+            text_color=COLORES["verde"] if disponible else COLORES["rojo"],
             font=(FUENTE, 10, "bold"),
+            padx=8,
         )
-        badge.pack(anchor="w", pady=(6, 0))
+        badge.pack(anchor="w", pady=(3, 0))
 
         ctk.CTkLabel(
             contenido,
             text=meta.get("descripcion", ""),
-            wraplength=450,
-            justify="left",
             text_color=COLORES["texto_secundario"],
             font=(FUENTE, 12),
-        ).pack(
-            anchor="w",
-            pady=(14, 8),
-        )
+            wraplength=340,
+            justify="left",
+        ).pack(anchor="w", pady=(12, 12), fill="x")
 
-        mensaje = disponibilidad.get(
-            "mensaje",
-            "",
-        )
-
-        if mensaje:
-            ctk.CTkLabel(
-                contenido,
-                text=mensaje,
-                wraplength=450,
-                justify="left",
-                text_color=color_estado,
-                font=(FUENTE, 11),
-            ).pack(anchor="w", pady=(0, 10))
-
-        ctk.CTkButton(
+        detalle_disp = ctk.CTkLabel(
             contenido,
-            text="Abrir módulo   →",
-            fg_color=COLORES["primario"],
-            text_color=COLORES["texto_boton"],
-            hover_color=COLORES["primario_hover"],
-            font=(FUENTE, 12, "bold"),
-            corner_radius=7,
-            command=lambda: self.on_abrir_proceso(
-                meta["id"]
-            ),
-        ).pack(
-            anchor="e",
-            pady=(6, 0),
+            text=f"• {disponibilidad.get('mensaje', '')}",
+            text_color=COLORES["verde"] if disponible else COLORES["rojo"],
+            font=(FUENTE, 11),
+            wraplength=340,
+            justify="left",
         )
+        detalle_disp.pack(anchor="w", pady=(0, 14), fill="x")
+
+        boton = ctk.CTkButton(
+            contenido,
+            text="Abrir módulo →",
+            command=lambda: self.on_abrir_proceso(meta["id"]),
+            fg_color=COLORES["primario"],
+            hover_color=COLORES["primario_hover"],
+            text_color=COLORES["texto_boton"],
+            font=(FUENTE, 13, "bold"),
+            height=34,
+        )
+        boton.pack(anchor="w")
 
         return card
